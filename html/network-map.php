@@ -11,14 +11,14 @@
  *
  */
 
-use LibreNMS\Config;
+use LibreNMS\Authentication\LegacyAuth;
 
 $links = 1;
 
 $init_modules = array('web', 'auth');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
-if (!Auth::check()) {
+if (!LegacyAuth::check()) {
     die('Unauthorized');
 }
 
@@ -32,8 +32,12 @@ if (strpos($_SERVER['REQUEST_URI'], 'anon')) {
     $anon = 1;
 }
 
-if (is_array(Config::get('branding'))) {
-    Config::set('branding', array_replace_recursive(Config::get('branding'), Config::get('branding.' . $_SERVER['SERVER_NAME']) ?: Config::get('branding.default')));
+if (isset($config['branding']) && is_array($config['branding'])) {
+    if (isset($config['branding'][$_SERVER['SERVER_NAME']])) {
+        $config = array_replace_recursive($config, $config['branding'][$_SERVER['SERVER_NAME']]);
+    } else {
+        $config = array_replace_recursive($config, $config['branding']['default']);
+    }
 }
 
 $where = '';
@@ -52,7 +56,7 @@ if (isset($_GET['format']) && preg_match("/^[a-z]*$/", $_GET['format'])) {
             graph [bgcolor=transparent];
 ';
 
-    if (!Auth::check()) {
+    if (!LegacyAuth::check()) {
         $map .= "\"Not authenticated\" [fontsize=20 fillcolor=\"lightblue\", URL=\"/\" shape=box3d]\n";
     } else {
         $locations = getlocations();
@@ -70,7 +74,7 @@ if (isset($_GET['format']) && preg_match("/^[a-z]*$/", $_GET['format'])) {
                     }
                     $loc_id = $locations[$device['location']];
 
-                    $map .= "\"" . $device['hostname'] . "\" [fontsize=20, fillcolor=\"lightblue\", group=" . $loc_id . " URL=\"" . Config::get('base_url') . "/device/device=" . $device['device_id'] . "/tab=neighbours/selection=map/\" shape=box3d]\n";
+                    $map .= "\"".$device['hostname']."\" [fontsize=20, fillcolor=\"lightblue\", group=".$loc_id." URL=\"{$config['base_url']}/device/device=".$device['device_id']."/tab=neighbours/selection=map/\" shape=box3d]\n";
                 }
 
                 foreach ($links as $link) {
@@ -131,24 +135,24 @@ if (isset($_GET['format']) && preg_match("/^[a-z]*$/", $_GET['format'])) {
                             }
                             $ifdone[$src][$sif['port_id']] = 1;
                         } else {
-                            $map .= "\"" . $sif['port_id'] . "\" [label=\"" . $sif['label'] . "\", fontsize=12, fillcolor=lightblue, URL=\"" . Config::get('base_url') . "/device/device=" . $device['device_id'] . "/tab=port/port=$local_port_id/\"]\n";
+                            $map .= "\"" . $sif['port_id'] . "\" [label=\"" . $sif['label'] . "\", fontsize=12, fillcolor=lightblue, URL=\"{$config['base_url']}/device/device=".$device['device_id']."/tab=port/port=$local_port_id/\"]\n";
                             if (!$ifdone[$src][$sif['port_id']]) {
                                 $map .= "\"$src\" -> \"" . $sif['port_id'] . "\" [weight=500000, arrowsize=0, len=0];\n";
                                 $ifdone[$src][$sif['port_id']] = 1;
                             }
 
                             if ($dst_host) {
-                                $map .= "\"$dst\" [URL=\"" . Config::get('base_url') . "/device/device=$dst_host/tab=neighbours/selection=map/\", fontsize=20, shape=box3d]\n";
+                                $map .= "\"$dst\" [URL=\"{$config['base_url']}/device/device=$dst_host/tab=neighbours/selection=map/\", fontsize=20, shape=box3d]\n";
                             } else {
                                 $map .= "\"$dst\" [ fontsize=20 shape=box3d]\n";
                             }
 
                             if ($dst_host == $device['device_id'] || $where == '') {
-                                $map .= "\"" . $dif['port_id'] . "\" [label=\"" . $dif['label'] . "\", fontsize=12, fillcolor=lightblue, URL=\"" . Config::get('base_url') . "/device/device=$dst_host/tab=port/port=$remote_port_id/\"]\n";
+                                $map .= "\"" . $dif['port_id'] . "\" [label=\"" . $dif['label'] . "\", fontsize=12, fillcolor=lightblue, URL=\"{$config['base_url']}/device/device=$dst_host/tab=port/port=$remote_port_id/\"]\n";
                             } else {
                                 $map .= "\"" . $dif['port_id'] . "\" [label=\"" . $dif['label'] . " \", fontsize=12, fillcolor=lightgray";
                                 if ($dst_host) {
-                                    $map .= ", URL=\"" . Config::get('base_url') . "/device/device=$dst_host/tab=port/port=$remote_port_id/\"";
+                                    $map .= ", URL=\"{$config['base_url']}/device/device=$dst_host/tab=port/port=$remote_port_id/\"";
                                 }
                                 $map .= "]\n";
                             }
@@ -188,19 +192,19 @@ if (isset($_GET['format']) && preg_match("/^[a-z]*$/", $_GET['format'])) {
 
     if ($links > 30) {
         // Unflatten if there are more than 10 links. beyond that it gets messy
-        $maptool = Config::get('dot');
+        $maptool = $config['dot'];
     } else {
-        $maptool = Config::get('dot');
+        $maptool = $config['dot'];
     }
 
     if ($where == '') {
-        $maptool = Config::get('sfdp') . ' -Gpack -Goverlap=prism -Gcharset=latin1 -Gsize=20,20';
-        $maptool = Config::get('dot');
+        $maptool = $config['sfdp'] . ' -Gpack -Goverlap=prism -Gcharset=latin1 -Gsize=20,20';
+        $maptool = $config['dot'];
     }
 
     $descriptorspec = array(0 => array("pipe", "r"),1 => array("pipe", "w") );
 
-    $mapfile = Config::get('temp_dir') . "/" . strgen() . ".png";
+    $mapfile = $config['temp_dir'] . "/"  . strgen() . ".png";
 
     $process = proc_open($maptool.' -T'.$_GET['format'], $descriptorspec, $pipes);
 
@@ -222,10 +226,10 @@ if (isset($_GET['format']) && preg_match("/^[a-z]*$/", $_GET['format'])) {
     }
     echo $img;
 } else {
-    if (Auth::check()) {
+    if (LegacyAuth::check()) {
         // FIXME level 10 only?
         echo '<center>
-                  <object width=1200 height=1000 data="' . Config::get('base_url') . '/network-map.php?format=svg" type="image/svg+xml"></object>
+                  <object width=1200 height=1000 data="'. $config['base_url'] . '/network-map.php?format=svg" type="image/svg+xml"></object>
               </center>
         ';
     }

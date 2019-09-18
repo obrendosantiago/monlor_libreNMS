@@ -49,8 +49,6 @@ $app = require_once __DIR__.'/../bootstrap/app.php';
 
 $kernel = $app->make(Illuminate\Contracts\Http\Kernel::class);
 
-$_SERVER['HTTP_ACCEPT'] = 'application/json'; // force json accepted
-
 $response = $kernel->handle(
     $request = Illuminate\Http\Request::capture()
 );

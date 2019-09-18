@@ -10,10 +10,12 @@
  * @copyright  (C) 2006 - 2012 Adam Armstrong
  */
 
+use LibreNMS\Authentication\LegacyAuth;
+
 $init_modules = array('web', 'auth');
 require realpath(__DIR__ . '/..') . '/includes/init.php';
 
-if (!Auth::check()) {
+if (!LegacyAuth::check()) {
     die('Unauthorized');
 }
 
