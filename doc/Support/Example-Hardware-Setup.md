@@ -1,7 +1,6 @@
 source: Support/Example-Hardware-Setup.md
 path: blob/master/doc/
-
-# Example hardware setups
+### Example hardware setups
 
 The information in this document is direct from users, it's a place for people to share their 
 setups so you have an idea of what may be required for your install.
@@ -14,7 +13,7 @@ select count(*) from ports where `deleted` = 0;
 select count(*) from sensors where `sensor_deleted` = 0;
 ```
 
-## [laf](https://github.com/laf)
+#### [laf](https://github.com/laf)
 
 > Home
 
@@ -33,7 +32,7 @@ Running in Proxmox.
 | Health sensors | 47                  | -                   |
 | Load           | < 0.1               | < 0.1               |
 
-## [Vente-Privée](https://github.com/vp-noc)
+#### [Vente-Privée](https://github.com/vp-noc)
 
 > NOC
 
@@ -50,7 +49,7 @@ Running in Proxmox.
 | Health sensors | 6238                | -                   |
 | Load           | < 0.5               | < 0.5               |
 
-## [KKrumm](https://github.com/kkrumm1)
+#### [KKrumm](https://github.com/kkrumm1)
 
 > Home
 
@@ -67,7 +66,7 @@ Running in Proxmox.
 | Health sensors | 44                  |                     |
 | Load           | < 2.5               |                     |
 
-## [KKrumm](https://github.com/kkrumm1)
+#### [KKrumm](https://github.com/kkrumm1)
 
 > Work
 
@@ -84,7 +83,7 @@ Running in Proxmox.
 | Health sensors | 3223                |                     |
 | Load           | < 14.5              |                     |
 
-## [CppMonkey(KodApa85)](https://github.com/cppmonkey)
+#### [CppMonkey(KodApa85)](https://github.com/cppmonkey)
 
 > Home
 
@@ -101,7 +100,7 @@ Running in Proxmox.
 | Health sensors | 70                  |                     |
 | Load           | < 0.5               |                     |
 
-## [CppMonkey(KodApa85)](https://github.com/cppmonkey)
+#### [CppMonkey(KodApa85)](https://github.com/cppmonkey)
 
 > Dev
 
@@ -120,7 +119,7 @@ Running in Ganeti
 | Health sensors | 884                 |                     |
 | Load           | < 1.0               |                     |
 
-## [CppMonkey(KodApa85)](https://github.com/cppmonkey)
+#### [CppMonkey(KodApa85)](https://github.com/cppmonkey)
 
 > Work NOC
 
@@ -139,7 +138,7 @@ Running in Ganeti Cluster with 2x Dell PER730xd - 64GB, Dual E5-2660 v3
 | Health sensors | 2329                |                     |
 | Load           | < 2.5               | < 1.5               |
 
-## [LaZyDK](https://github.com/lazydk)
+#### [LaZyDK](https://github.com/lazydk)
 
 > Home
 
@@ -156,7 +155,7 @@ Running in Ganeti Cluster with 2x Dell PER730xd - 64GB, Dual E5-2660 v3
 | Health sensors | 117                 |                     |
 | Load           | < 0.92              |                     |
 
-## [SirMaple](https://github.com/sirmaple)
+#### [SirMaple](https://github.com/sirmaple)
 
 > Home
 
@@ -172,20 +171,3 @@ Running in Ganeti Cluster with 2x Dell PER730xd - 64GB, Dual E5-2660 v3
 | Ports          | 196                 |                     |
 | Health sensors | 207                 |                     |
 | Load           | < 3.65              |                     |
-
-## [VVelox](https://github.com/VVelox)
-
-> Home / Dev
-
-|                | LibreNMS            | MariaDB             |
-| -------------- | ------------------- | ------------------- |
-| Type           | Supermicro X7SPA-HF | Same Server         |
-| OS             | FreeBSD 12-STABLE   |                     |
-| CPU            | Intel Atom D525     |                     |
-| Memory         | 4GB                 |                     |
-| Disk Type      | Raid 1, SATA        |                     |
-| Disk Space     | 1TB                 |                     |
-| Devices        | 17                  |                     |
-| Ports          | 174                 |                     |
-| Health sensors | 76                  |                     |
-| Load           | < 3                 |                     |

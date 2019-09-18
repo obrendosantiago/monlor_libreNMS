@@ -4,11 +4,9 @@ path: blob/master/doc/
 # About
 
 LibreNMS includes a highly customizable alerting system.
-The system requires a set of user-defined rules to evaluate the
-situation of each device, port, service or any other entity.
+The system requires a set of user-defined rules to evaluate the situation of each device, port, service or any other entity.
 
-> You can configure all options for alerting and transports via the
-> WebUI, config options in this document are crossed out but left for reference.
+> You can configure all options for alerting and transports via the WebUI, config options in this document are crossed out but left for reference.
 
 Table of Content:
 
@@ -47,6 +45,7 @@ Table of Content:
     - [Syslog](Transports.md#syslog)
     - [Elasticsearch](Transports.md#elasticsearch)
     - [Jira](Transports.md#jira)
+    
 - [Entities](Entities.md)
     - [Devices](Entities.md#devices)
     - [BGP Peers](Entities.md#bgppeers)

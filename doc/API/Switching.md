@@ -12,13 +12,11 @@ Input:
 -
 
 Example:
-
 ```curl
 curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/resources/vlans
 ```
 
 Output:
-
 ```json
 {
     "status": "ok",
@@ -44,20 +42,18 @@ Get a list of all VLANs for a given device.
 
 Route: `/api/v0/devices/:hostname/vlans`
 
-- hostname can be either the device hostname or id
+  - hostname can be either the device hostname or id
 
 Input:
 
   -
 
 Example:
-
 ```curl
 curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/vlans
 ```
 
 Output:
-
 ```json
 {
     "status": "ok",
@@ -85,13 +81,11 @@ Input:
   -
 
 Example:
-
 ```curl
 curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/resources/links
 ```
 
 Output:
-
 ```json
 {
     "status": "ok",
@@ -121,20 +115,18 @@ Get a list of Links per giver device.
 
 Route: `/api/v0/devices/:hostname/links`
 
-- hostname can be either the device hostname or id
+  - hostname can be either the device hostname or id
 
 Input:
 
   -
 
 Example:
-
 ```curl
 curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/devices/localhost/links
 ```
 
 Output:
-
 ```json
 {
     "status": "ok",
@@ -169,13 +161,11 @@ Input:
 -
 
 Example:
-
 ```curl
 curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/resources/link/10
 ```
 
 Output:
-
 ```json
 {
     "status": "ok",
@@ -204,21 +194,19 @@ Get a list of all ports FDB.
 
 Route: `/api/v0/resources/fdb/:mac`
 
-- mac is the specific MAC address you would like to query
+  - mac is the specific MAC address you would like to query
 
 Input:
 
 -
 
 Example:
-
 ```curl
 curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/resources/fdb
 curl -H 'X-Auth-Token: YOURAPITOKENHERE' https://librenms.org/api/v0/resources/fdb/1aaa2bbb3ccc
 ```
 
 Output:
-
 ```json
 {
     "status": "ok",

@@ -1,9 +1,7 @@
+# Environment Variables
 path: blob/master/doc/
 
-# Environment Variables
-
-LibreNMS allows certain settings to be set via the environment or
-through the .env file.
+LibreNMS allows certain settings to be set via the environment or through the .env file.
 
 ## Database
 
@@ -36,8 +34,7 @@ Set the base url for generated urls. Do not set this if it is not needed.
 
 You may need to set this when using reverse proxies combined with a subdirectory.
 
-Generally, LibreNMS will make correct URLs (especially if you have set
-up your proxy variables correctly)
+Generally, LibreNMS will make correct URLs (especially if you have set up your proxy variables correctly)
 
 ```dotenv
 APP_URL=http://librenms/
@@ -56,7 +53,6 @@ LIBRENMS_GROUP=librenms
 ## Debug
 
 Increases the amount of information shown when an error occurs.
-
 > WARNING: This may leak information, do not leave enabled.
 
 ```dotenv
