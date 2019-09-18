@@ -14,9 +14,10 @@ define('LARAVEL_START', microtime(true));
 |
 */
 
-@require_once __DIR__ . '/../app/Checks.php';
-\App\Checks::preAutoload();
-
 @include __DIR__ . '/../vendor/autoload.php';
+
+if (!class_exists(\App\Checks::class)) {
+    require __DIR__ . '/../app/Checks.php';
+}
 
 \App\Checks::postAutoload();
