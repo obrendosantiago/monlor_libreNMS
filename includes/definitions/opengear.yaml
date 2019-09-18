@@ -2,8 +2,6 @@ os: opengear
 text: Opengear
 type: 'OOB Management'
 icon: opengear
-over:
-    - { graph: device_signal, text: 'Signal' }
 mib_dir:
     - opengear
 discovery:

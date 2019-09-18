@@ -16,9 +16,11 @@
  * the source code distribution for details.
  */
 
+use LibreNMS\Authentication\LegacyAuth;
 use LibreNMS\Config;
 use LibreNMS\Exceptions\InvalidIpException;
 use LibreNMS\Util\Git;
+use LibreNMS\Util\Html;
 use LibreNMS\Util\IP;
 use LibreNMS\Util\Laravel;
 
@@ -198,8 +200,10 @@ function get_sensor_rrd($device, $sensor)
 
 function get_sensor_rrd_name($device, $sensor)
 {
+    global $config;
+
     # For IPMI, sensors tend to change order, and there is no index, so we prefer to use the description as key here.
-    if (Config::getOsSetting($device['os'], 'sensor_descr') || $sensor['poller_type'] == "ipmi") {
+    if ($config['os'][$device['os']]['sensor_descr'] || $sensor['poller_type'] == "ipmi") {
         return array('sensor', $sensor['sensor_class'], $sensor['sensor_type'], $sensor['sensor_descr']);
     } else {
         return array('sensor', $sensor['sensor_class'], $sensor['sensor_type'], $sensor['sensor_index']);
@@ -754,11 +758,13 @@ function is_client_authorized($clientip)
  */
 function get_graph_subtypes($type, $device = null)
 {
+    global $config;
+
     $type = basename($type);
     $types = array();
 
     // find the subtypes defined in files
-    if ($handle = opendir(Config::get('install_dir') . "/includes/html/graphs/$type/")) {
+    if ($handle = opendir($config['install_dir'] . "/includes/html/graphs/$type/")) {
         while (false !== ($file = readdir($handle))) {
             if ($file != "." && $file != ".." && $file != "auth.inc.php" && strstr($file, ".inc.php")) {
                 $types[] = str_replace(".inc.php", "", $file);
@@ -771,8 +777,8 @@ function get_graph_subtypes($type, $device = null)
         // find the MIB subtypes
         $graphs = get_device_graphs($device);
 
-        foreach (Config::get('graph_types') as $type => $unused1) {
-            foreach (Config::get("graph_types.$type") as $subtype => $unused2) {
+        foreach ($config['graph_types'] as $type => $unused1) {
+            foreach ($config['graph_types'][$type] as $subtype => $unused2) {
                 if (is_mib_graph($type, $subtype) && in_array($subtype, $graphs)) {
                     $types[] = $subtype;
                 }
@@ -792,8 +798,9 @@ function get_device_graphs($device)
 
 function get_smokeping_files($device)
 {
+    global $config;
     $smokeping_files = array();
-    if (Config::has('smokeping.dir')) {
+    if (isset($config['smokeping']['dir'])) {
         $smokeping_dir = generate_smokeping_file($device);
         if ($handle = opendir($smokeping_dir)) {
             while (false !== ($file = readdir($handle))) {
@@ -807,8 +814,8 @@ function get_smokeping_files($device)
                         } else {
                             $target = str_replace('.rrd', '', $file);
                             $target = str_replace('_', '.', $target);
-                            $smokeping_files['in'][$target][Config::get('own_hostname')] = $file;
-                            $smokeping_files['out'][Config::get('own_hostname')][$target] = $file;
+                            $smokeping_files['in'][$target][$config['own_hostname']] = $file;
+                            $smokeping_files['out'][$config['own_hostname']][$target] = $file;
                         }
                     }
                 }
@@ -821,10 +828,11 @@ function get_smokeping_files($device)
 
 function generate_smokeping_file($device, $file = '')
 {
-    if (Config::get('smokeping.integration') === true) {
-        return Config::get('smokeping.dir') . '/' . $device['type'] . '/' . $file;
+    global $config;
+    if ($config['smokeping']['integration'] === true) {
+        return $config['smokeping']['dir'] .'/'. $device['type'] .'/' . $file;
     } else {
-        return Config::get('smokeping.dir') . '/' . $file;
+        return $config['smokeping']['dir'] . '/' . $file;
     }
 } // generate_smokeping_file
 
@@ -853,7 +861,7 @@ function is_mib_poller_enabled($device)
 {
     $val = get_dev_attrib($device, 'poll_mib');
     if ($val == null) {
-        return Config::get("poller_modules.mib", false);
+        return is_module_enabled('poller', 'mib');
     }
     return $val;
 } // is_mib_poller_enabled
@@ -1025,6 +1033,20 @@ function can_ping_device($attribs)
 
 
 /*
+ * @return true if the requested module type & name is globally enabled
+ */
+function is_module_enabled($type, $module)
+{
+    global $config;
+    if (isset($config[$type.'_modules'][$module])) {
+        return $config[$type.'_modules'][$module] == 1;
+    } else {
+        return false;
+    }
+} // is_module_enabled
+
+
+/*
  * @return true if every string in $arr begins with $str
  */
 function begins_with($str, $arr)
@@ -1067,7 +1089,7 @@ function print_mib_poller_disabled()
 {
     echo '<h4>MIB polling is not enabled</h4>
 <p>
-Set \'poller_modules.mib\' in your config or enable for this device specifically to enable.
+Set <code>$config[\'poller_modules\'][\'mib\'] = 1;</code> in <code>config.php</code> or enable for this device specifically to enable.
 </p>';
 } // print_mib_poller_disabled
 
@@ -1113,16 +1135,17 @@ function parse_location($location)
  */
 function version_info($remote = false)
 {
+    global $config;
     $version = \LibreNMS\Util\Version::get();
     $output = [
         'local_ver' => $version->local(),
     ];
     if (Git::repoPresent() && Git::binaryExists()) {
-        if ($remote === true && Config::get('update_channel') == 'master') {
+        if ($remote === true && $config['update_channel'] == 'master') {
             $api = curl_init();
             set_curl_proxy($api);
             curl_setopt($api, CURLOPT_USERAGENT, 'LibreNMS');
-            curl_setopt($api, CURLOPT_URL, Config::get('github_api') . 'commits/master');
+            curl_setopt($api, CURLOPT_URL, $config['github_api'].'commits/master');
             curl_setopt($api, CURLOPT_RETURNTRANSFER, 1);
             curl_setopt($api, CURLOPT_TIMEOUT, 5);
             curl_setopt($api, CURLOPT_TIMEOUT_MS, 5000);
@@ -1138,10 +1161,10 @@ function version_info($remote = false)
     $output['php_ver']     = phpversion();
     $output['mysql_ver']   = dbIsConnected() ? dbFetchCell('SELECT version()') : '?';
     $output['rrdtool_ver'] = str_replace('1.7.01.7.0', '1.7.0', implode(' ', array_slice(explode(' ', shell_exec(
-        Config::get('rrdtool', 'rrdtool') . ' --version |head -n1'
+        ($config['rrdtool'] ?: 'rrdtool') . ' --version |head -n1'
     )), 1, 1)));
     $output['netsnmp_ver'] = str_replace('version: ', '', rtrim(shell_exec(
-        Config::get('snmpget', 'snmpget') . ' -V 2>&1'
+        ($config['snmpget'] ?: 'snmpget').' --version 2>&1'
     )));
 
     return $output;
@@ -1511,35 +1534,40 @@ function display($value, $purifier_config = [])
  */
 function load_os(&$device)
 {
+    global $config;
+
     if (!isset($device['os'])) {
         d_echo("No OS to load\n");
         return;
     }
 
-    if (!Config::get("os.{$device['os']}.definition_loaded")) {
+    if (!isset($config['os'][$device['os']]['definition_loaded'])) {
         $tmp_os = Symfony\Component\Yaml\Yaml::parse(
-            file_get_contents(Config::get('install_dir') . '/includes/definitions/' . $device['os'] . '.yaml')
+            file_get_contents($config['install_dir'] . '/includes/definitions/' . $device['os'] . '.yaml')
         );
 
-        Config::set("os.{$device['os']}", array_replace_recursive($tmp_os, Config::get("os.{$device['os']}", [])));
+        if (isset($config['os'][$device['os']])) {
+            $config['os'][$device['os']] = array_replace_recursive($tmp_os, $config['os'][$device['os']]);
+        } else {
+            $config['os'][$device['os']] = $tmp_os;
+        }
     }
 
     // Set type to a predefined type for the OS if it's not already set
-    $loaded_os_type = Config::get("os.{$device['os']}.type");
-    if ((!isset($device['attribs']['override_device_type']) && $device['attribs']['override_device_type'] != 1) && $loaded_os_type != $device['type']) {
-        log_event('Device type changed ' . $device['type'] . ' => ' . $loaded_os_type, $device, 'system', 3);
-        $device['type'] = $loaded_os_type;
-        dbUpdate(['type' => $loaded_os_type], 'devices', 'device_id=?', [$device['device_id']]);
-        d_echo("Device type changed to $loaded_os_type!\n");
+    if ((!isset($device['attribs']['override_device_type']) && $device['attribs']['override_device_type'] != 1) && $config['os'][$device['os']]['type'] != $device['type']) {
+        log_event('Device type changed ' . $device['type'] . ' => ' . $config['os'][$device['os']]['type'], $device, 'system', 3);
+        $device['type'] = $config['os'][$device['os']]['type'];
+        dbUpdate(array('type' => $device['type']), 'devices', 'device_id=?', array($device['device_id']));
+        d_echo("Device type changed to " . $device['type'] . "!\n");
     }
 
-    if ($os_group = Config::get("os.{$device['os']}.group")) {
-        $device['os_group'] = $os_group;
+    if ($config['os'][$device['os']]['group']) {
+        $device['os_group'] = $config['os'][$device['os']]['group'];
     } else {
         unset($device['os_group']);
     }
 
-    Config::set("os.{$device['os']}.definition_loaded", true);
+    $config['os'][$device['os']]['definition_loaded'] = true;
 }
 
 /**
@@ -1551,10 +1579,10 @@ function load_os(&$device)
  */
 function load_all_os($existing = false, $cached = true)
 {
-    $install_dir = Config::get('install_dir');
-    $cache_file = $install_dir . '/cache/os_defs.cache';
+    global $config;
+    $cache_file = $config['install_dir'] . '/cache/os_defs.cache';
 
-    if ($cached && is_file($cache_file) && (time() - filemtime($cache_file) < Config::get('os_def_cache_time'))) {
+    if ($cached && is_file($cache_file) && (time() - filemtime($cache_file) < $config['os_def_cache_time'])) {
         // Cached
         $os_defs = unserialize(file_get_contents($cache_file));
 
@@ -1563,22 +1591,26 @@ function load_all_os($existing = false, $cached = true)
             $os_defs = array_diff_key($os_defs, dbFetchColumn('SELECT DISTINCT(`os`) FROM `devices`'));
         }
 
-        Config::set('os', array_replace_recursive($os_defs, Config::get('os')));
+        $config['os'] = array_replace_recursive($os_defs, $config['os']);
     } else {
         // load from yaml
         if ($existing) {
-            $os_list = array_map(function ($os) use ($install_dir) {
-                return $install_dir . '/includes/definitions/' . $os . '.yaml';
+            $os_list = array_map(function ($os) use ($config) {
+                return $config['install_dir'] . '/includes/definitions/'. $os . '.yaml';
             }, dbFetchColumn('SELECT DISTINCT(`os`) FROM `devices`'));
         } else {
-            $os_list = glob($install_dir . '/includes/definitions/*.yaml');
+            $os_list = glob($config['install_dir'].'/includes/definitions/*.yaml');
         }
 
         foreach ($os_list as $file) {
             if (is_readable($file)) {
                 $tmp = Symfony\Component\Yaml\Yaml::parse(file_get_contents($file));
 
-                Config::set("os.{$tmp['os']}", array_replace_recursive($tmp, Config::get("os.{$tmp['os']}", [])));
+                if (isset($config['os'][$tmp['os']])) {
+                    $config['os'][$tmp['os']] = array_replace_recursive($tmp, $config['os'][$tmp['os']]);
+                } else {
+                    $config['os'][$tmp['os']] = $tmp;
+                }
             }
         }
     }
@@ -1599,7 +1631,7 @@ function update_os_cache($force = false)
         d_echo('Updating os_def.cache... ');
 
         // remove previously cached os settings and replace with user settings
-        $config = ['os' => []]; // local $config variable, not global
+        $config = array('os' => array()); // local $config variable, not global
         include "$install_dir/config.php";
         Config::set('os', $config['os']);
 
@@ -1677,11 +1709,13 @@ function set_numeric($value, $default = 0)
 
 function get_vm_parent_id($device)
 {
+    global $config;
+
     if (empty($device['hostname'])) {
         return false;
     }
 
-    return dbFetchCell("SELECT `device_id` FROM `vminfo` WHERE `vmwVmDisplayName` = ? OR `vmwVmDisplayName` = ?", [$device['hostname'], $device['hostname'] . '.' . Config::get('mydomain')]);
+    return dbFetchCell("SELECT `device_id` FROM `vminfo` WHERE `vmwVmDisplayName` = ? OR `vmwVmDisplayName` = ?", array($device['hostname'],$device['hostname'].'.'.$config['mydomain']));
 }
 
 /**
@@ -1702,7 +1736,7 @@ function get_user_pref($name, $default = null, $user_id = null)
     }
 
     if (is_null($user_id)) {
-        $user_id = Auth::id();
+        $user_id = LegacyAuth::id();
     }
 
     $pref = dbFetchCell(
@@ -1731,7 +1765,7 @@ function set_user_pref($name, $value, $user_id = null)
 {
     global $user_prefs;
     if (is_null($user_id)) {
-        $user_id = Auth::id();
+        $user_id = LegacyAuth::id();
     }
 
     $pref = array(
@@ -1798,4 +1832,22 @@ function check_file_permissions($file, $mask)
 function array_by_column($array, $column)
 {
     return array_combine(array_column($array, $column), $array);
+}
+
+/**
+ * Get all consecutive pairs of values in an array.
+ * [1,2,3,4] -> [[1,2],[2,3],[3,4]]
+ *
+ * @param array $array
+ * @return array
+ */
+function array_pairs($array)
+{
+    $pairs = [];
+
+    for ($i = 1; $i < count($array); $i++) {
+        $pairs[] = [$array[$i -1], $array[$i]];
+    }
+
+    return $pairs;
 }

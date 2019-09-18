@@ -19,9 +19,7 @@
       </tr>
 <?php
 
-use LibreNMS\Config;
-
-$poller_modules = Config::get('poller_modules');
+$poller_modules = $config['poller_modules'];
 ksort($poller_modules);
 foreach ($poller_modules as $module => $module_status) {
     echo('
@@ -40,8 +38,8 @@ foreach ($poller_modules as $module => $module_status) {
         </td>
         <td>');
 
-    if (Config::has("os.{$device['os']}.poller_modules.$module")) {
-        if (Config::get("os.{$device['os']}.poller_modules.$module")) {
+    if (isset($config['os'][$device['os']]['poller_modules'][$module])) {
+        if ($config['os'][$device['os']]['poller_modules'][$module]) {
             echo('<span class="text-success">Enabled</span>');
             $module_status = 1;
         } else {
@@ -104,7 +102,7 @@ foreach ($poller_modules as $module => $module_status) {
 
 <?php
 
-$discovery_modules = Config::get('discovery_modules');
+$discovery_modules = $config['discovery_modules'];
 ksort($discovery_modules);
 foreach ($discovery_modules as $module => $module_status) {
     echo('
@@ -125,8 +123,8 @@ foreach ($discovery_modules as $module => $module_status) {
         </td>
         <td>');
 
-    if (Config::has("os.{$device['os']}.discovery_modules.$module")) {
-        if (Config::get("os.{$device['os']}.discovery_modules.$module")) {
+    if (isset($config['os'][$device['os']]['discovery_modules'][$module])) {
+        if ($config['os'][$device['os']]['discovery_modules'][$module]) {
             echo('<span class="text-success">Enabled</span>');
             $module_status = 1;
         } else {

@@ -4,9 +4,9 @@ use LibreNMS\Authentication\LegacyAuth;
 
 $no_refresh = true;
 
-if (!Auth::user()->hasGlobalAdmin()) {
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     include 'includes/html/error-no-perm.inc.php';
-} elseif (Auth::user()->isDemo()) {
+} elseif (LegacyAuth::user()->isDemoUser()) {
     demo_account();
 } else {
     echo '<h3>Add User</h3>';
@@ -36,7 +36,6 @@ if (!Auth::user()->hasGlobalAdmin()) {
             }//end if
         }//end if
         echo "<form method='post' action='adduser/' class='form-horizontal' role='form'> <input type='hidden' value='add' name='action'>";
-        echo csrf_field();
         echo "
   <div class='form-group'>
     <label for='new_username' class='col-sm-2 control-label'>Username</label>

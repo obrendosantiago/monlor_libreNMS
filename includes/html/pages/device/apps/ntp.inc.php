@@ -18,6 +18,7 @@ $options['type'] = 'ntp';
 $components = $component->getComponents($device['device_id'], $options);
 $components = $components[$device['device_id']];
 
+global $config;
 ?>
 <table id='table' class='table table-condensed table-responsive table-striped'>
     <thead>
@@ -61,7 +62,7 @@ foreach ($components as $peer) {
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
-        $graph_array['to'] = \LibreNMS\Config::get('time.now');
+        $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_ntp_stratum';
         require 'includes/html/print-graphrow.inc.php';
 
@@ -80,7 +81,7 @@ foreach ($components as $peer) {
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
-        $graph_array['to'] = \LibreNMS\Config::get('time.now');
+        $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_ntp_offset';
         require 'includes/html/print-graphrow.inc.php';
 
@@ -99,7 +100,7 @@ foreach ($components as $peer) {
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
-        $graph_array['to'] = \LibreNMS\Config::get('time.now');
+        $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_ntp_delay';
         require 'includes/html/print-graphrow.inc.php';
 
@@ -118,7 +119,7 @@ foreach ($components as $peer) {
         $graph_array['device'] = $device['device_id'];
         $graph_array['height'] = '100';
         $graph_array['width']  = '215';
-        $graph_array['to'] = \LibreNMS\Config::get('time.now');
+        $graph_array['to']     = $config['time']['now'];
         $graph_array['type']   = 'device_ntp_dispersion';
         require 'includes/html/print-graphrow.inc.php';
 

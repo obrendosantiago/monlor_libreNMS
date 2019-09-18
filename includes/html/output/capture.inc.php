@@ -23,7 +23,9 @@
  * @author     Tony Murray <murraytony@gmail.com>
  */
 
-if (!Auth::user()->hasGlobalAdmin()) {
+use LibreNMS\Authentication\LegacyAuth;
+
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     echo("Insufficient Privileges");
     exit();
 }
@@ -33,7 +35,7 @@ $type = $_REQUEST['type'];
 
 switch ($type) {
     case 'poller':
-        $cmd = ['php', \LibreNMS\Config::get('install_dir') . '/poller.php', '-h', $hostname, '-r', '-f', '-d'];
+        $cmd = ['php', $config['install_dir'] . '/poller.php', '-h', $hostname, '-r', '-f', '-d'];
         $filename = "poller-$hostname.txt";
         break;
     case 'snmpwalk':
@@ -44,7 +46,7 @@ switch ($type) {
         $filename = $device['os'] . '-' . $device['hostname'] . '.snmpwalk';
         break;
     case 'discovery':
-        $cmd = ['php', \LibreNMS\Config::get('install_dir') . '/discovery.php', '-h', $hostname, '-d'];
+        $cmd = ['php', $config['install_dir'] . '/discovery.php', '-h', $hostname, '-d'];
         $filename = "discovery-$hostname.txt";
         break;
     default:

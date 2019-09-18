@@ -1,7 +1,5 @@
 <?php
 
-use LibreNMS\Config;
-
 $dest = device_by_id_cache($_GET['dest']);
 
 // This is my translation of Smokeping's graphing.
@@ -13,7 +11,7 @@ require 'includes/html/graphs/common.inc.php';
 require 'includes/html/graphs/device/smokeping_common.inc.php';
 
 $i         = 0;
-$pings = Config::get('smokeping.pings');
+$pings     = $config['smokeping']['pings'];
 $iter      = 0;
 $colourset = 'mixed';
 
@@ -29,27 +27,25 @@ if ($width > '500') {
     $rrd_options .= " COMMENT:'".substr(str_pad($unit_text, ($descr_len + 5)), 0, ($descr_len + 5))." RTT      Loss    SDev   RTT\:SDev                              \l'";
 }
 
-$filename_dir = generate_smokeping_file($device);
-if ($device['hostname'] == Config::get('own_hostname')) {
-    $filename = $filename_dir . $dest['hostname'] . '.rrd';
+if ($device['hostname'] == $config['own_hostname']) {
+    $filename = $config['smokeping']['dir'].$dest['hostname'].'.rrd';
     if (!rrdtool_check_rrd_exists($filename)) {
         // Try with dots in hostname replaced by underscores
-        $filename = $filename_dir . str_replace('.', '_', $dest['hostname']) . '.rrd';
+        $filename = $config['smokeping']['dir'].str_replace('.', '_', $dest['hostname']).'.rrd';
     }
 } else {
-    $filename = $filename_dir . $dest['hostname'] . '~' . $device['hostname'] . '.rrd';
+    $filename = $config['smokeping']['dir'].$dest['hostname'].'~'.$device['hostname'].'.rrd';
     if (!rrdtool_check_rrd_exists($filename)) {
         // Try with dots in hostname replaced by underscores
-        $filename = $filename_dir . str_replace('.', '_', $dest['hostname']) . '~' . $device['hostname'] . '.rrd';
+        $filename = $config['smokeping']['dir'].str_replace('.', '_', $dest['hostname']).'~'.$device['hostname'].'.rrd';
     }
 }
 
-
-if (!Config::has("graph_colours.$colourset.$iter")) {
+if (!isset($config['graph_colours'][$colourset][$iter])) {
     $iter = 0;
 }
 
-$colour = Config::get("graph_colours.$colourset.$iter");
+  $colour = $config['graph_colours'][$colourset][$iter];
   $iter++;
 
   $descr = rrdtool_escape($source, $descr_len);

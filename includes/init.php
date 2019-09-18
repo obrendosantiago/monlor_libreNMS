@@ -30,7 +30,7 @@
 use LibreNMS\Authentication\LegacyAuth;
 use LibreNMS\Config;
 
-global $vars, $console_color;
+global $config, $vars, $console_color;
 
 error_reporting(E_ERROR|E_PARSE|E_CORE_ERROR|E_COMPILE_ERROR);
 ini_set('display_errors', 1);
@@ -72,6 +72,7 @@ if (module_selected('mocksnmp', $init_modules)) {
 require_once $install_dir . '/includes/services.inc.php';
 require_once $install_dir . '/includes/functions.php';
 require_once $install_dir . '/includes/rewrites.php';
+require_once $install_dir . '/includes/device-groups.inc.php';
 
 if (module_selected('web', $init_modules)) {
     require_once $install_dir . '/includes/html/functions.inc.php';
@@ -86,7 +87,7 @@ if (module_selected('polling', $init_modules)) {
 }
 
 if (module_selected('alerts', $init_modules)) {
-    require_once $install_dir . '/LibreNMS/Alert/RunAlerts.php';
+    require_once $install_dir . '/includes/alerts.inc.php';
 }
 
 // Boot Laravel
@@ -126,8 +127,8 @@ if (!Config::has('install_dir')) {
 ini_set('display_errors', $display_bak);
 
 
-if (is_numeric(Config::get('php_memory_limit')) && Config::get('php_memory_limit') > 128) {
-    ini_set('memory_limit', Config::get('php_memory_limit') . 'M');
+if (isset($config['php_memory_limit']) && is_numeric($config['php_memory_limit']) && $config['php_memory_limit'] > 128) {
+    ini_set('memory_limit', $config['php_memory_limit'].'M');
 }
 
 try {

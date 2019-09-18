@@ -23,11 +23,10 @@
  * @author     Neil Lathwood <neil@lathwood.co.uk>
  */
 
-use LibreNMS\Alert\AlertDB;
-use LibreNMS\Alert\AlertUtil;
 use LibreNMS\Alerting\QueryBuilderParser;
+use LibreNMS\Authentication\LegacyAuth;
 
-if (!Auth::user()->hasGlobalAdmin()) {
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     echo("Insufficient Privileges");
     exit();
 }
@@ -40,12 +39,12 @@ switch ($type) {
         $filename = "alerts-$hostname.txt";
         $device_id = getidbyname($hostname);
         $device = device_by_id_cache($device_id);
-        $rules = AlertUtil::getRules($device_id);
+        $rules = GetRules($device_id);
         $output = '';
         $results = array();
         foreach ($rules as $rule) {
             if (empty($rule['query'])) {
-                $rule['query'] = AlertDB::genSQL($rule['rule'], $rule['builder']);
+                $rule['query'] = GenSQL($rule['rule'], $rule['builder']);
             }
             $sql = $rule['query'];
             $qry = dbFetchRow($sql, array($device_id));
@@ -74,8 +73,8 @@ switch ($type) {
             $output .= 'Alert query: ' . $rule['query'] . PHP_EOL;
             $output .= 'Rule match: ' . $response . PHP_EOL . PHP_EOL;
         }
-        if (\LibreNMS\Config::get('alert.transports.mail') === true) {
-            $contacts = AlertUtil::getContacts($results);
+        if ($config['alert']['transports']['mail'] === true) {
+            $contacts = GetContacts($results);
             if (count($contacts) > 0) {
                 $output .= 'Found ' . count($contacts) . ' contacts to send alerts to.' . PHP_EOL;
             }
@@ -86,8 +85,8 @@ switch ($type) {
         }
         $transports = '';
         $x = 0;
-        foreach (\LibreNMS\Config::get('alert.transports') as $name => $v) {
-            if (\LibreNMS\Config::get("alert.transports.$name") === true) {
+        foreach ($config['alert']['transports'] as $name => $v) {
+            if ($config['alert']['transports'][$name] === true) {
                 $transports .= 'Transport: ' . $name . PHP_EOL;
                 $x++;
             }

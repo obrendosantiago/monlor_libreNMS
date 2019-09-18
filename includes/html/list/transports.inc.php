@@ -23,7 +23,9 @@
  * @author     Vivia Nguyen-Tran <vivia@ualberta>
  */
 
-if (!Auth::user()->hasGlobalRead()) {
+use LibreNMS\Authentication\LegacyAuth;
+
+if (!LegacyAuth::user()->hasGlobalRead()) {
     return [];
 }
 

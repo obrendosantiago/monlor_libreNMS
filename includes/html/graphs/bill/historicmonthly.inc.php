@@ -47,7 +47,9 @@ $graph->xgrid->SetColor('#e0e0e0', '#efefef');
 
 function YCallback($value)
 {
-    return format_number($value, \LibreNMS\Config::get('billing.base'), 2, 1) . 'B';
+    global $config;
+
+    return format_number($value, $config['billing']['base'], 2, 1).'B';
 }
 
 $graph->yaxis->SetFont(FF_FONT1);

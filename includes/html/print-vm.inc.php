@@ -20,8 +20,10 @@ if ($vm['vmwVmGuestOS'] == 'E: tools not installed') {
     echo '<td class="box-desc">Unknown (VMware Tools not installed)</td>';
 } elseif ($vm['vmwVmGuestOS'] == '') {
     echo '<td class="box-desc"><i>(Unknown)</i></td>';
+} elseif (isset($config['vmware_guestid'][$vm['vmwVmGuestOS']])) {
+    echo '<td class="list">'.$config['vmware_guestid'][$vm['vmwVmGuestOS']].'</td>';
 } else {
-    echo '<td class="list">' . \LibreNMS\Util\Rewrite::vmwareGuest($vm['vmwVmGuestOS']) . '</td>';
+    echo '<td class="list">'.$vm['vmwVmGuestOS'].'</td>';
 }
 
 if ($vm['vmwVmMemSize'] >= 1024) {

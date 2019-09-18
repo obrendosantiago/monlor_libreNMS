@@ -1,12 +1,15 @@
 <?php
 
-use LibreNMS\Config;
+
 use LibreNMS\Util\Rewrite;
 
 function rewrite_location($location)
 {
-    if (is_array(Config::get('location_map_regex'))) {
-        foreach (Config::get('location_map_regex') as $reg => $val) {
+    // FIXME -- also check the database for rewrites?
+    global $config, $debug;
+
+    if (is_array($config['location_map_regex'])) {
+        foreach ($config['location_map_regex'] as $reg => $val) {
             if (preg_match($reg, $location)) {
                 $location = $val;
                 break;
@@ -14,8 +17,8 @@ function rewrite_location($location)
         }
     }
 
-    if (is_array(Config::get('location_map_regex_sub'))) {
-        foreach (Config::get('location_map_regex_sub') as $reg => $val) {
+    if (is_array($config['location_map_regex_sub'])) {
+        foreach ($config['location_map_regex_sub'] as $reg => $val) {
             if (preg_match($reg, $location)) {
                 $location = preg_replace($reg, $val, $location);
                 break;
@@ -23,8 +26,8 @@ function rewrite_location($location)
         }
     }
 
-    if (Config::has("location_map.$location")) {
-        $location = Config::get("location_map.$location");
+    if (isset($config['location_map'][$location])) {
+        $location = $config['location_map'][$location];
     }
 
     return $location;
@@ -73,6 +76,8 @@ function rewrite_entity_descr($descr)
  */
 function cleanPort($interface, $device = null)
 {
+    global $config;
+
     $interface['ifAlias'] = display($interface['ifAlias']);
     $interface['ifName']  = display($interface['ifName']);
     $interface['ifDescr'] = display($interface['ifDescr']);
@@ -83,17 +88,17 @@ function cleanPort($interface, $device = null)
 
     $os = strtolower($device['os']);
 
-    if (Config::get("os.$os.ifname")) {
+    if (isset($config['os'][$os]['ifname'])) {
         $interface['label'] = $interface['ifName'];
 
         if ($interface['ifName'] == '') {
             $interface['label'] = $interface['ifDescr'];
         }
-    } elseif (Config::get("os.$os.ifalias")) {
+    } elseif (isset($config['os'][$os]['ifalias'])) {
         $interface['label'] = $interface['ifAlias'];
     } else {
         $interface['label'] = $interface['ifDescr'];
-        if (Config::get("os.$os.ifindex")) {
+        if (isset($config['os'][$os]['ifindex'])) {
             $interface['label'] = $interface['label'].' '.$interface['ifIndex'];
         }
     }
@@ -102,16 +107,16 @@ function cleanPort($interface, $device = null)
         list($interface['label']) = explode('thomson', $interface['label']);
     }
 
-    if (is_array(Config::get('rewrite_if'))) {
-        foreach (Config::get('rewrite_if') as $src => $val) {
+    if (is_array($config['rewrite_if'])) {
+        foreach ($config['rewrite_if'] as $src => $val) {
             if (stristr($interface['label'], $src)) {
                 $interface['label'] = $val;
             }
         }
     }
 
-    if (is_array(Config::get('rewrite_if_regexp'))) {
-        foreach (Config::get('rewrite_if_regexp') as $reg => $val) {
+    if (is_array($config['rewrite_if_regexp'])) {
+        foreach ($config['rewrite_if_regexp'] as $reg => $val) {
             if (preg_match($reg.'i', $interface['label'])) {
                 $interface['label'] = preg_replace($reg.'i', $val, $interface['label']);
             }

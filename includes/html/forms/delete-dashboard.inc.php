@@ -22,9 +22,11 @@
  * @subpackage Dashboards
  */
 
+use LibreNMS\Authentication\LegacyAuth;
+
 header('Content-type: application/json');
 
-if (!Auth::check()) {
+if (!LegacyAuth::check()) {
     $response = array(
         'status'  => 'error',
         'message' => 'Unauthenticated',
@@ -39,8 +41,8 @@ $message   = 'unknown error';
 $dashboard_id = (int)$_REQUEST['dashboard_id'];
 
 if ($dashboard_id) {
-    dbDelete('users_widgets', 'user_id = ? && dashboard_id = ?', [Auth::id(), $dashboard_id]);
-    if (dbDelete('dashboards', 'user_id = ? && dashboard_id = ?', [Auth::id(), $dashboard_id])) {
+    dbDelete('users_widgets', 'user_id = ? && dashboard_id = ?', [LegacyAuth::id(), $dashboard_id]);
+    if (dbDelete('dashboards', 'user_id = ? && dashboard_id = ?', [LegacyAuth::id(), $dashboard_id])) {
         $status  = 'ok';
         $message = 'Dashboard deleted';
     } else {

@@ -1,9 +1,10 @@
 <?php
 
+use LibreNMS\Authentication\LegacyAuth;
 use LibreNMS\Exceptions\InvalidIpException;
 use LibreNMS\Util\IPv6;
 
-if (!Auth::user()->hasGlobalRead()) {
+if (!LegacyAuth::user()->hasGlobalRead()) {
     include 'includes/html/error-no-perm.inc.php';
 } else {
     $link_array = array(
@@ -270,8 +271,8 @@ if (!Auth::user()->hasGlobalRead()) {
         $graph_array                = array();
         $graph_array['type']        = 'bgp_updates';
         $graph_array['id']          = $peer['bgpPeer_id'];
-        $graph_array['to'] = \LibreNMS\Config::get('time.now');
-        $graph_array['from'] = \LibreNMS\Config::get('time.day');
+        $graph_array['to']          = $config['time']['now'];
+        $graph_array['from']        = $config['time']['day'];
         $graph_array['height']      = '110';
         $graph_array['width']       = $width;
 
@@ -354,7 +355,7 @@ if (!Auth::user()->hasGlobalRead()) {
         if ($peer['graph']) {
             $graph_array['height'] = '100';
             $graph_array['width']  = '218';
-            $graph_array['to'] = \LibreNMS\Config::get('time.now');
+            $graph_array['to']     = $config['time']['now'];
             echo '<tr></tr><tr class="bgp"'.($bg_image ? ' background="'.$bg_image.'"' : '').'"><td colspan="9">';
 
             include 'includes/html/print-graphrow.inc.php';

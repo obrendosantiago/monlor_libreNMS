@@ -1,7 +1,5 @@
 <?php
 
-use LibreNMS\Config;
-
 /*
  * LibreNMS
  *
@@ -16,8 +14,8 @@ use LibreNMS\Config;
 
 function prometheus_push($device, $measurement, $tags, $fields)
 {
-    global $prometheus;
-    if (Config::get('prometheus.enable') === true) {
+    global $prometheus, $config;
+    if ($config['prometheus']['enable'] === true) {
         if ($prometheus !== false) {
             try {
                 $ch = curl_init();
@@ -38,7 +36,7 @@ function prometheus_push($device, $measurement, $tags, $fields)
                     }
                 }
 
-                $promurl = Config::get('prometheus.url') . '/metrics/job/' . Config::get('prometheus.job') . '/instance/' . $device['hostname'] . $promtags;
+                $promurl = $config['prometheus']['url'].'/metrics/job/'.$config['prometheus']['job'].'/instance/'.$device['hostname'].$promtags;
                 $promurl = str_replace(" ", "-", $promurl); // Prometheus doesn't handle tags with spaces in url
         
                 d_echo("\nPrometheus data:\n");

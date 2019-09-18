@@ -9,27 +9,25 @@ $link_array = array(
     );
 
 echo generate_link('General', $link_array, array('nfsen' => 'general'));
-echo '|';
-echo generate_link('Stats', $link_array, array('nfsen' => 'stats'));
 
-$printedChannel = false;
-$nfsen_hostname = nfsen_hostname($device['hostname']);
-foreach (\LibreNMS\Config::get('nfsen_rrds') as $nfsenDir) {
-    $hostDir = $nfsenDir.'/'.$nfsen_hostname.'/';
+$printedChannel=false;
+$nfsenHostname=str_replace('.', $config['nfsen_split_char'], $device['hostname']);
+foreach ($config['nfsen_rrds'] as $nfsenDir) {
+    $hostDir=$nfsenDir.'/'.$nfsenHostname.'/';
     if (is_dir($hostDir)) {
-        $nfsenRRDchannelGlob = $hostDir.'*.rrd';
+        $nfsenRRDchannelGlob=$hostDir.'*.rrd';
         foreach (glob($nfsenRRDchannelGlob) as $nfsenRRD) {
             $channel = str_replace(array($hostDir, '.rrd'), '', $nfsenRRD);
 
             if (!$printedChannel) {
                 echo '|Channels:';
-                $printedChannel = true;
+                $printedChannel=true;
             } else {
                 echo ',';
             }
 
             if ($vars['channel'] == $channel) {
-                $channelFilter = $hostDir.$channel.'-filter.txt';
+                $channelFilter=$hostDir.$channel.'-filter.txt';
             }
 
             echo generate_link($channel, $link_array, array('nfsen' => 'channel', 'channel' => $channel));
@@ -39,12 +37,9 @@ foreach (\LibreNMS\Config::get('nfsen_rrds') as $nfsenDir) {
 
 print_optionbar_end();
 
-if (!$vars['nfsen']) {
-    $vars['nfsen'] = 'general';
-}
-
-if (is_file('includes/html/pages/device/nfsen/'.mres($vars['nfsen']).'.inc.php')) {
-    include 'includes/html/pages/device/nfsen/'.mres($vars['nfsen']).'.inc.php';
+$nfsen_type = basename($vars['nfsen'] ?? 'general');
+if (is_file("includes/html/pages/device/nfsen/$nfsen_type.inc.php")) {
+    include "includes/html/pages/device/nfsen/$nfsen_type.inc.php";
 } else {
     include 'includes/html/pages/device/nfsen/general.inc.php';
 }

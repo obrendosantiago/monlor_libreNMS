@@ -215,7 +215,6 @@ $graphs['bind']      = array(
 );
 $graphs['smart'] = array(
     'id5',
-    'id9',
     'id10',
     'id173',
     'id183',

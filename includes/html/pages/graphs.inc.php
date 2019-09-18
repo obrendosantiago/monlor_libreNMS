@@ -14,8 +14,12 @@ if (session('widescreen')) {
     $thumb_width=113;
 }
 
-$vars['from'] = parse_at_time($vars['from']) ?: Config::get('time.day');
-$vars['to'] = parse_at_time($vars['to']) ?: Config::get('time.now');
+if (!is_numeric($vars['from'])) {
+    $vars['from'] = $config['time']['day'];
+}
+if (!is_numeric($vars['to'])) {
+    $vars['to']   = $config['time']['now'];
+}
 
 preg_match('/^(?P<type>[A-Za-z0-9]+)_(?P<subtype>.+)/', $vars['type'], $graphtype);
 
@@ -36,8 +40,8 @@ if (is_file("includes/html/graphs/".$type."/auth.inc.php")) {
 if (!$auth) {
     require 'includes/html/error-no-perm.inc.php';
 } else {
-    if (Config::has("graph_types.$type.$subtype.descr")) {
-        $title .= " :: " . Config::get("graph_types.$type.$subtype.descr");
+    if (isset($config['graph_types'][$type][$subtype]['descr'])) {
+        $title .= " :: " . $config['graph_types'][$type][$subtype]['descr'];
     } elseif ($type == "device" && $subtype == "collectd") {
         $title .= " :: " . nicecase($subtype) . " :: " . $vars['c_plugin'];
         if (isset($vars['c_plugin_instance'])) {
@@ -55,7 +59,7 @@ if (!$auth) {
     $graph_array['height'] = "60";
     $graph_array['width'] = $thumb_width;
     $graph_array['legend'] = "no";
-    $graph_array['to'] = Config::get('time.now');
+    $graph_array['to'] = $config['time']['now'];
 
     print_optionbar_start();
     echo $title;
@@ -63,7 +67,6 @@ if (!$auth) {
     // FIXME allow switching between types for sensor and wireless also restrict types to ones that have data
     if ($type != 'sensor') {
         echo '<div style="float: right;"><form action="">';
-        echo csrf_field();
         echo "<select name='type' id='type' onchange=\"window.open(this.options[this.selectedIndex].value,'_top')\" >";
 
         foreach (get_graph_subtypes($type, $device) as $avail_type) {
@@ -80,12 +83,12 @@ if (!$auth) {
     print_optionbar_end();
 
 
-    $thumb_array = Config::get('graphs.row.normal');
+    $thumb_array = $config['graphs']['row']['normal'];
 
     echo '<table width=100% class="thumbnail_graph_table"><tr>';
 
     foreach ($thumb_array as $period => $text) {
-        $graph_array['from'] = Config::get("time.$period");
+        $graph_array['from']   = $config['time'][$period];
 
         $link_array = $vars;
         $link_array['from'] = $graph_array['from'];
@@ -104,22 +107,22 @@ if (!$auth) {
     echo('</tr></table>');
 
     $graph_array = $vars;
-    $graph_array['height'] = Config::get('webui.min_graph_height');
+    $graph_array['height'] = $config['webui']['min_graph_height'];
     $graph_array['width']  = $graph_width;
 
-    if ($screen_width = Session::get('screen_width')) {
-        if ($screen_width > 800) {
-            $graph_array['width'] = ($screen_width - ($screen_width /10));
+    if ($_SESSION['screen_width']) {
+        if ($_SESSION['screen_width'] > 800) {
+            $graph_array['width'] = ($_SESSION['screen_width'] - ($_SESSION['screen_width']/10));
         } else {
-            $graph_array['width'] = ($screen_width - ($screen_width /4));
+            $graph_array['width'] = ($_SESSION['screen_width'] - ($_SESSION['screen_width']/4));
         }
     }
 
-    if ($screen_height = Session::get('screen_height')) {
-        if ($screen_height > 960) {
-            $graph_array['height'] = ($screen_height - ($screen_height /2));
+    if ($_SESSION['screen_height']) {
+        if ($_SESSION['screen_height'] > 960) {
+            $graph_array['height'] = ($_SESSION['screen_height'] - ($_SESSION['screen_height']/2));
         } else {
-            $graph_array['height'] = max($graph_array['height'], ($screen_height - ($screen_height /1.5)));
+            $graph_array['height'] = max($graph_array['height'], ($_SESSION['screen_height'] - ($_SESSION['screen_height']/1.5)));
         }
     }
 
@@ -152,11 +155,6 @@ if (!$auth) {
     } else {
         echo(generate_link("Show RRD Command", $vars, array('page' => "graphs", 'showcommand' => "yes")));
     }
-
-    if ($vars['type'] == 'port_bits') {
-        echo ' | To show trend, set to future date';
-    }
-
     echo('</center>');
 
     echo generate_graph_js_state($graph_array);
@@ -170,14 +168,14 @@ if (!$auth) {
     }
     echo("</center></div>");
 
-    if (Config::has('graph_descr.' . $vars['type'])) {
+    if (isset($config['graph_descr'][$vars['type']])) {
         print_optionbar_start();
         echo('<div style="float: left; width: 30px;">
             <div style="margin: auto auto;">
             <i class="fa fa-info-circle fa-lg icon-theme" aria-hidden="true"></i>
             </div>
             </div>');
-        echo(Config::get('graph_descr.' . $vars['type']));
+        echo($config['graph_descr'][$vars['type']]);
         print_optionbar_end();
     }
 

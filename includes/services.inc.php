@@ -1,6 +1,5 @@
 <?php
 
-use LibreNMS\Config;
 use LibreNMS\RRD\RrdDefinition;
 
 function get_service_status($device = null)
@@ -35,7 +34,7 @@ function get_service_status($device = null)
     return $service_count;
 }
 
-function add_service($device, $type, $desc, $ip = 'localhost', $param = "", $ignore = 0, $disabled = 0)
+function add_service($device, $type, $desc, $ip = 'localhost', $param = "", $ignore = 0)
 {
 
     if (!is_array($device)) {
@@ -46,7 +45,7 @@ function add_service($device, $type, $desc, $ip = 'localhost', $param = "", $ign
         $ip = $device['hostname'];
     }
 
-    $insert = array('device_id' => $device['device_id'], 'service_ip' => $ip, 'service_type' => $type, 'service_changed' => array('UNIX_TIMESTAMP(NOW())'), 'service_desc' => $desc, 'service_param' => $param, 'service_ignore' => $ignore, 'service_status' => 3, 'service_message' => 'Service not yet checked', 'service_ds' => '{}', 'service_disabled' => $disabled);
+    $insert = array('device_id' => $device['device_id'], 'service_ip' => $ip, 'service_type' => $type, 'service_changed' => array('UNIX_TIMESTAMP(NOW())'), 'service_desc' => $desc, 'service_param' => $param, 'service_ignore' => $ignore, 'service_status' => 3, 'service_message' => 'Service not yet checked', 'service_ds' => '{}');
     return dbInsert($insert, 'services');
 }
 
@@ -116,19 +115,21 @@ function discover_service($device, $service)
 
 function poll_service($service)
 {
+    global $config;
+
     $update = array();
     $old_status = $service['service_status'];
     $check_cmd = "";
 
     // if we have a script for this check, use it.
-    $check_script = Config::get('install_dir') . '/includes/services/check_' . strtolower($service['service_type']) . '.inc.php';
+    $check_script = $config['install_dir'].'/includes/services/check_'.strtolower($service['service_type']).'.inc.php';
     if (is_file($check_script)) {
         include $check_script;
     }
 
     // If we do not have a cmd from the check script, build one.
     if ($check_cmd == "") {
-        $check_cmd = Config::get('nagios_plugins') . "/check_" . $service['service_type'] . " -H " . ($service['service_ip'] ? $service['service_ip'] : $service['hostname']);
+        $check_cmd = $config['nagios_plugins'] . "/check_" . $service['service_type'] . " -H " . ($service['service_ip'] ? $service['service_ip'] : $service['hostname']);
         $check_cmd .= " " . $service['service_param'];
     }
 
@@ -324,8 +325,9 @@ function check_service($command)
  */
 function list_available_services()
 {
+    global $config;
     $services = array();
-    foreach (scandir(Config::get('nagios_plugins')) as $file) {
+    foreach (scandir($config['nagios_plugins']) as $file) {
         if (substr($file, 0, 6) === 'check_') {
             $services[] = substr($file, 6);
         }

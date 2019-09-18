@@ -12,9 +12,11 @@
  * the source code distribution for details.
  */
 
+use LibreNMS\Authentication\LegacyAuth;
+
 header('Content-type: text/plain');
 
-if (!Auth::user()->hasGlobalAdmin()) {
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     die('ERROR: You need to be admin');
 }
 
@@ -31,7 +33,7 @@ if (!is_numeric($_POST['user_id']) || !isset($_POST['token'])) {
     $create = dbInsert(array('user_id' => $_POST['user_id'], 'token_hash' => $_POST['token'], 'description' => $_POST['description']), 'api_tokens');
     if ($create > '0') {
         echo 'API token has been created';
-        Session::put('api_token', true);
+        $_SESSION['api_token'] = true;
         exit;
     } else {
         echo 'ERROR: An error occurred creating the API token';

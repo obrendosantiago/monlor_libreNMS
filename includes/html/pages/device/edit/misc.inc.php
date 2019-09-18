@@ -2,7 +2,6 @@
 
 echo '
 <form class="form-horizontal">
-    ' . csrf_field() . '
     <div class="form-group">
         <label for="icmp" class="col-sm-4 control-label">Disable ICMP Test?</label>
         <div class="col-sm-8">

@@ -1,5 +1,7 @@
 <?php
 
+use LibreNMS\Authentication\LegacyAuth;
+
 // Calculate filters
 $prev = !empty($vars['period']) && ($vars['period'] == 'prev');
 $wheres = array();
@@ -46,10 +48,10 @@ if ($prev) {
 }
 
 // Permissions check
-if (!Auth::user()->hasGlobalRead()) {
+if (!LegacyAuth::user()->hasGlobalRead()) {
     $query  .= ' INNER JOIN `bill_perms` AS `BP` ON `bills`.`bill_id` = `BP`.`bill_id` ';
     $wheres[] = '`BP`.`user_id`=?';
-    $param[] = Auth::id();
+    $param[] = LegacyAuth::id();
 }
 
 if (sizeof($wheres) > 0) {
@@ -145,15 +147,11 @@ foreach (dbFetchRows($sql, $param) as $bill) {
     $bar        = print_percentage_bar(250, 20, $percent, null, 'ffffff', $background['left'], $percent.'%', 'ffffff', $background['right']);
     $actions    = "";
 
-    if (!$prev && Auth::user()->hasGlobalAdmin()) {
+    if (!$prev && LegacyAuth::user()->hasGlobalAdmin()) {
         $actions .= "<a href='" . generate_url(array('page' => 'bill', 'bill_id' => $bill['bill_id'], 'view' => 'edit')) .
             "'><i class='fa fa-pencil fa-lg icon-theme' title='Edit' aria-hidden='true'></i> Edit</a> ";
     }
-    if (strtolower($bill['bill_type']) == 'cdr') {
-        $predicted = format_si(getPredictedUsage($bill['bill_day'], $tmp_used)).'bps';
-    } elseif (strtolower($bill['bill_type']) == 'quota') {
-        $predicted = format_bytes_billing(getPredictedUsage($bill['bill_day'], $tmp_used));
-    }
+    $predicted = format_bytes_billing(getPredictedUsage($bill['bill_day'], $tmp_used));
 
     $response[] = array(
         'bill_name'     => $bill_name,

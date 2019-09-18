@@ -35,13 +35,11 @@ foreach ($dbq as $ds) {
 
     if ($ds['ds_graph'] == 'yes') {
         if (empty($ds['colour'])) {
-            $colour = \LibreNMS\Config::get("graph_colours.mixed.$c_i");
-
-            if (!$colour) {
+            if (!$config['graph_colours']['mixed'][$c_i]) {
                 $c_i = 0;
-                $colour = \LibreNMS\Config::get("graph_colours.mixed.$c_i");
             }
 
+            $colour = $config['graph_colours']['mixed'][$c_i];
             $c_i++;
         } else {
             $colour = $ds['colour'];

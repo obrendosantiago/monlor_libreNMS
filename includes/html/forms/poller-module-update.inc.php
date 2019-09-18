@@ -1,8 +1,10 @@
 <?php
 
+use LibreNMS\Authentication\LegacyAuth;
+
 header('Content-type: text/plain');
 
-if (!Auth::user()->hasGlobalAdmin()) {
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     die('ERROR: You need to be admin');
 }
 
@@ -22,7 +24,7 @@ if (!isset($module) && validate_device_id($device['device_id']) === false) {
         $state = 0;
     }
 
-    if (isset($attribs['poll_' . $module]) && $attribs['poll_' . $module] != \LibreNMS\Config::get("poller_modules.$module")) {
+    if (isset($attribs['poll_'.$module]) && $attribs['poll_'.$module] != $config['poller_modules'][$module]) {
         del_dev_attrib($device, $module);
     } else {
         set_dev_attrib($device, $module, $state);

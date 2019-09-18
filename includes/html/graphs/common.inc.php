@@ -3,18 +3,18 @@
 use LibreNMS\Util\Clean;
 
 if ($_GET['from']) {
-    $from = parse_at_time($_GET['from']);
+    $from = preg_match('/(-\d+[hdm]|now)/', $_GET['from']) ? $_GET['from'] : (int)$_GET['from'];
 }
 
 if ($_GET['to']) {
-    $to = parse_at_time($_GET['to']);
+    $to = preg_match('/(-?\d+[hdm]|now)/', $_GET['to']) ? $_GET['to'] : (int)$_GET['to'];
 }
 
 if ($_GET['width']) {
     $width = (int)$_GET['width'];
 }
 
-if (\LibreNMS\Config::get('trim_tobias')) {
+if ($config['trim_tobias']) {
     $width += 12;
 }
 
@@ -82,7 +82,7 @@ if (isset($scale_rigid)) {
 }
 
 $rrd_options .= ' -E --start '.$from.' --end '.$to.' --width '.$width.' --height '.$height.' ';
-$rrd_options .= \LibreNMS\Config::get('rrdgraph_def_text') . ' -c FONT#' . \LibreNMS\Config::get('rrdgraph_def_text_color');
+$rrd_options .= $config['rrdgraph_def_text'].' -c FONT#'.$config['rrdgraph_def_text_color'];
 
 if ($_GET['bg']) {
     $rrd_options .= ' -c CANVAS#' . Clean::alphaDash($_GET['bg']) . ' ';
@@ -98,9 +98,9 @@ if ($height < '99') {
 }
 
 if ($width <= '300') {
-    $rrd_options .= ' --font LEGEND:7:' . \LibreNMS\Config::get('mono_font') . ' --font AXIS:6:' . \LibreNMS\Config::get('mono_font');
+    $rrd_options .= ' --font LEGEND:7:'.$config['mono_font'].' --font AXIS:6:'.$config['mono_font'];
 } else {
-    $rrd_options .= ' --font LEGEND:8:' . \LibreNMS\Config::get('mono_font') . ' --font AXIS:7:' . \LibreNMS\Config::get('mono_font');
+    $rrd_options .= ' --font LEGEND:8:'.$config['mono_font'].' --font AXIS:7:'.$config['mono_font'];
 }
 
 $rrd_options .= ' --font-render-mode normal';

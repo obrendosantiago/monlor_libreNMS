@@ -10,6 +10,8 @@
  * the source code distribution for details.
  */
 
+global $config;
+
 use LibreNMS\RRD\RrdDefinition;
 
 $oids = ['entPhysicalModelName.1', 'entPhysicalSoftwareRev.1', 'entPhysicalSerialNum.1'];

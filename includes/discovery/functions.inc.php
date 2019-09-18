@@ -228,9 +228,6 @@ function discover_sensor(&$valid, $class, $device, $oid, $index, $type, $descr, 
     if (!is_numeric($divisor)) {
         $divisor  = 1;
     }
-    if (can_skip_sensor($device, $type, $descr)) {
-        return false;
-    }
 
     d_echo("Discover sensor: $oid, $index, $type, $descr, $poller_type, $divisor, $multiplier, $entPhysicalIndex, $current, (limits: LL: $low_limit, LW: $low_warn_limit, W: $warn_limit, H: $high_limit)\n");
 
@@ -385,20 +382,29 @@ function discover_sensor(&$valid, $class, $device, $oid, $index, $type, $descr, 
 
 function sensor_low_limit($class, $current)
 {
-    // matching an empty case executes code until a break is reached
+    $limit = null;
+
     switch ($class) {
         case 'temperature':
             $limit = $current - 10;
             break;
         case 'voltage':
-            $limit = $current * 0.85;
+                $limit = $current * 0.85;
             break;
         case 'humidity':
             $limit = 30;
             break;
+        case 'count':
+        case 'current':
+            $limit = null;
+            break;
         case 'fanspeed':
             $limit = $current * 0.80;
             break;
+        case 'power':
+            $limit = null;
+            break;
+        case 'power_consumed':
         case 'power_factor':
             $limit = -1;
             break;
@@ -406,24 +412,34 @@ function sensor_low_limit($class, $current)
             $limit = -80;
             break;
         case 'airflow':
+        case 'dbm':
         case 'snr':
         case 'frequency':
         case 'pressure':
         case 'cooling':
             $limit = $current * 0.95;
             break;
-        default:
-            return null;
+        case 'delay':
+        case 'quality_factor':
+        case 'chromatic_dispersion':
+        case 'ber':
+        case 'eer':
+        case 'waterflow':
     }//end switch
 
-    return round($limit, 11);
+    if (is_numeric($limit)) {
+        return round($limit, 11);
+    }
+
+    return $limit;
 }
 
 //end sensor_low_limit()
 
 function sensor_limit($class, $current)
 {
-    // matching an empty case executes code until a break is reached
+    $limit = null;
+
     switch ($class) {
         case 'temperature':
             $limit = $current + 20;
@@ -434,11 +450,17 @@ function sensor_limit($class, $current)
         case 'humidity':
             $limit = 70;
             break;
-        case 'fanspeed':
-            $limit = $current * 1.80;
+        case 'count':
+        case 'current':
+        case 'power':
+            $limit = $current * 1.50;
             break;
+        case 'power_consumed':
         case 'power_factor':
             $limit = 1;
+            break;
+        case 'fanspeed':
+            $limit = $current * 1.80;
             break;
         case 'signal':
             $limit = -30;
@@ -447,17 +469,20 @@ function sensor_limit($class, $current)
             $limit = 80;
             break;
         case 'airflow':
+        case 'dbm':
         case 'snr':
         case 'frequency':
         case 'pressure':
         case 'cooling':
             $limit = $current * 1.05;
             break;
-        default:
-            return null;
     }//end switch
 
-    return round($limit, 11);
+    if (is_numeric($limit)) {
+        return round($limit, 11);
+    }
+
+    return $limit;
 }
 
 //end sensor_limit()
@@ -786,7 +811,6 @@ function discover_entity_physical(&$valid, $device, $entPhysicalIndex, $entPhysi
                 'entPhysicalIsFRU'        => $entPhysicalIsFRU,
                 'entPhysicalAlias'        => $entPhysicalAlias,
                 'entPhysicalAssetID'      => $entPhysicalAssetID,
-                'ifIndex'                 => $ifIndex,
             );
             dbUpdate($update_data, 'entPhysical', '`device_id`=? AND `entPhysicalIndex`=?', array($device['device_id'], $entPhysicalIndex));
         }//end if
@@ -822,11 +846,8 @@ function discover_process_ipv6(&$valid, $ifIndex, $ipv6_address, $ipv6_prefixlen
                 echo 'n';
             }
 
-            if ($context_name == null) {
-                $ipv6_network_id = dbFetchCell('SELECT `ipv6_network_id` FROM `ipv6_networks` WHERE `ipv6_network` = ? AND `context_name` IS NULL', array($ipv6_network));
-            } else {
-                $ipv6_network_id = dbFetchCell('SELECT `ipv6_network_id` FROM `ipv6_networks` WHERE `ipv6_network` = ? AND `context_name` = ?', array($ipv6_network, $context_name));
-            }
+            $ipv6_network_id = dbFetchCell('SELECT `ipv6_network_id` FROM `ipv6_networks` WHERE `ipv6_network` = ? AND `context_name` = ?', array($ipv6_network, $context_name));
+
             if (dbFetchCell('SELECT COUNT(*) FROM `ipv6_addresses` WHERE `ipv6_address` = ? AND `ipv6_prefixlen` = ? AND `port_id` = ?', array($ipv6_address, $ipv6_prefixlen, $port_id)) == '0') {
                 dbInsert(array(
                     'ipv6_address' => $ipv6_address,
@@ -838,15 +859,6 @@ function discover_process_ipv6(&$valid, $ifIndex, $ipv6_address, $ipv6_prefixlen
                     'context_name' => $context_name
                 ), 'ipv6_addresses');
                 echo '+';
-            } else if (dbFetchCell('SELECT COUNT(*) FROM `ipv6_addresses` WHERE `ipv6_address` = ? AND `ipv6_prefixlen` = ? AND `port_id` = ? AND `ipv6_network_id` = ""', [$ipv6_address, $ipv6_prefixlen, $port_id]) == '1') {
-                // Update IPv6 network ID if not set
-                if ($context_name == null) {
-                    $ipv6_network_id = dbFetchCell('SELECT `ipv6_network_id` FROM `ipv6_networks` WHERE `ipv6_network` = ? AND `context_name` IS NULL', [$ipv6_network]);
-                } else {
-                    $ipv6_network_id = dbFetchCell('SELECT `ipv6_network_id` FROM `ipv6_networks` WHERE `ipv6_network` = ? AND `context_name` = ?', [$ipv6_network, $context_name]);
-                }
-                dbUpdate(['ipv6_network_id' => $ipv6_network_id], 'ipv6_addresses', '`ipv6_address` = ? AND `ipv6_prefixlen` = ? AND `port_id` = ?', [$ipv6_address, $ipv6_prefixlen, $port_id]);
-                echo 'u';
             } else {
                 //Update Context
                 dbUpdate(array('context_name' => $device['context_name']), 'ipv6_addresses', '`ipv6_address` = ? AND `ipv6_prefixlen` = ? AND `port_id` = ?', array($ipv6_address, $ipv6_prefixlen, $port_id));
@@ -1006,7 +1018,7 @@ function ignore_storage($os, $descr)
  */
 function discovery_process(&$valid, $device, $sensor_type, $pre_cache)
 {
-    if ($device['dynamic_discovery']['modules']['sensors'][$sensor_type] && ! can_skip_sensor($device, $sensor_type, '')) {
+    if ($device['dynamic_discovery']['modules']['sensors'][$sensor_type]) {
         $sensor_options = array();
         if (isset($device['dynamic_discovery']['modules']['sensors'][$sensor_type]['options'])) {
             $sensor_options = $device['dynamic_discovery']['modules']['sensors'][$sensor_type]['options'];
@@ -1056,18 +1068,14 @@ function discovery_process(&$valid, $device, $sensor_type, $pre_cache)
 
                 d_echo("Final sensor value: $value\n");
 
-                $skippedFromYaml = YamlDiscovery::canSkipItem($value, $index, $data, $sensor_options, $pre_cache);
-                if ($skippedFromYaml === false && is_numeric($value)) {
+                if (YamlDiscovery::canSkipItem($value, $index, $data, $sensor_options, $pre_cache) === false && is_numeric($value)) {
                     $oid = str_replace('{{ $index }}', $index, $data['num_oid']);
-                    // if index is a string, we need to convert it to OID
-                    // strlen($index) as first number, and each letter converted to a number, separated by dots
-                    $oid = str_replace('{{ $index_string }}', strlen($index) . '.' . implode(".", unpack("c*", $index)), $oid);
 
                     // process the description
                     $descr = YamlDiscovery::replaceValues('descr', $index, null, $data, $pre_cache);
 
                     // process the group
-                    $group = YamlDiscovery::replaceValues('group', $index, null, $data, $pre_cache) ?: null;
+                    $group = YamlDiscovery::replaceValues('group', $index, null, $data, $pre_cache);
 
                     $divisor = $data['divisor'] ?: ($sensor_options['divisor'] ?: 1);
                     $multiplier = $data['multiplier'] ?: ($sensor_options['multiplier'] ?: 1);
@@ -1333,27 +1341,6 @@ function add_cbgp_peer($device, $peer, $afi, $safi)
         dbInsert($cbgp, 'bgpPeers_cbgp');
     }
 }
-
-/**
- * check if we should skip this sensor from discovery
- * @param $device
- * @param string $sensor_type
- * @param string $sensor_descr
- * @return bool
- */
-function can_skip_sensor($device, $sensor_type = '', $sensor_descr = '')
-{
-    if (! empty($sensor_type) && Config::getCombined($device['os'], "disabled_sensors.$sensor_type", false)) {
-        return true;
-    }
-    foreach (Config::getCombined($device['os'], "disabled_sensors_regex", []) as $skipRegex) {
-        if (! empty($sensor_descr) && preg_match($skipRegex, $sensor_descr)) {
-            return true;
-        }
-    }
-    return false;
-}
-
 
 /**
  * check if we should skip this device from discovery

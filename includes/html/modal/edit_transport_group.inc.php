@@ -11,7 +11,9 @@
  * the source code distribution for details.
  */
 
-if (Auth::user()->hasGlobalAdmin()) {
+use LibreNMS\Authentication\LegacyAuth;
+
+if (LegacyAuth::user()->hasGlobalAdmin()) {
     ?>
 <!--Modal for adding or updating a transport group -->
     <div class="modal fade" id="edit-transport-group" tabindex="-1" role="dialog"
@@ -24,7 +26,6 @@ if (Auth::user()->hasGlobalAdmin()) {
                 </div>
                 <div class="modal-body">
                     <form method="post" role="form" id="transport-group" class="form-horizontal transport-group-form">
-                        <?php echo csrf_field() ?>
                         <input type="hidden" name="group_id" id="group_id" value="">
                         <input type="hidden" name="type" id="type" value="transport-groups">
                         <div class='form-group' title="The description of this transport group.">
@@ -67,7 +68,6 @@ if (Auth::user()->hasGlobalAdmin()) {
                 </div>
                 <div class="modal-footer">
                     <form role="form" class="remove_contract_group">
-                        <?php echo csrf_field() ?>
                         <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
                         <button type="button" class="btn btn-danger danger" id="remove-transport-group" data-target="remove-transport-group">Delete</button>
                         <input type="hidden" name="group_id" id="delete_group_id" value="">

@@ -13,6 +13,8 @@
  * @author     LibreNMS Contributors
 */
 
+use LibreNMS\Authentication\LegacyAuth;
+
 $where = '1';
 
 if (is_numeric($vars['device'])) {
@@ -30,11 +32,11 @@ if ($vars['string']) {
     $param[] = '%' . $vars['string'] . '%';
 }
 
-if (Auth::user()->hasGlobalRead()) {
+if (LegacyAuth::user()->hasGlobalRead()) {
     $sql = " FROM `eventlog` AS E LEFT JOIN `devices` AS `D` ON `E`.`device_id`=`D`.`device_id` WHERE $where";
 } else {
     $sql = " FROM `eventlog` AS E, devices_perms AS P WHERE $where AND E.device_id = P.device_id AND P.user_id = ?";
-    $param[] = Auth::id();
+    $param[] = LegacyAuth::id();
 }
 
 if (isset($searchPhrase) && !empty($searchPhrase)) {
@@ -62,7 +64,7 @@ if ($rowCount != -1) {
     $sql .= " LIMIT $limit_low,$limit_high";
 }
 
-$sql = "SELECT `E`.*,DATE_FORMAT(datetime, '" . \LibreNMS\Config::get('dateformat.mysql.compact') . "') as humandate,severity $sql";
+$sql = "SELECT `E`.*,DATE_FORMAT(datetime, '" . $config['dateformat']['mysql']['compact'] . "') as humandate,severity $sql";
 
 foreach (dbFetchRows($sql, $param) as $eventlog) {
     $dev = device_by_id_cache($eventlog['device_id']);

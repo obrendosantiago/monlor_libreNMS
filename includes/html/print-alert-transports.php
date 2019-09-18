@@ -1,5 +1,7 @@
 <?php
 
+use LibreNMS\Authentication\LegacyAuth;
+
 $no_refresh = true;
 
 ?>
@@ -27,7 +29,7 @@ require_once 'includes/html/modal/edit_transport_group.inc.php';
     </tr>
     <td colspan="6">
 <?php
-if (Auth::user()->hasGlobalAdmin()) {
+if (LegacyAuth::user()->hasGlobalAdmin()) {
     echo "<button type='button' class='btn btn-primary btn-sm' data-toggle='modal' data-target='#edit-alert-transport'><i class='fa fa-plus'></i> Create alert transport</button>";
 }
 
@@ -63,9 +65,7 @@ foreach (dbFetchRows($query) as $transport) {
         }
 
         $val = $transport_config[$item['name']];
-        if ($item['type'] == 'password') {
-            $val = '<b>&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;</b>';
-        }
+
         // Match value to key name for select inputs
         if ($item['type'] == 'select') {
             $val = array_search($val, $item['options']);

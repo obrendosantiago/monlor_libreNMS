@@ -12,10 +12,12 @@
  * the source code distribution for details.
  */
 
+use LibreNMS\Authentication\LegacyAuth;
+
 header('Content-type: text/plain');
 
-if (!Auth::user()->hasGlobalAdmin()) {
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     die('ERROR: You need to be admin');
 }
 
-\App\Models\Callback::set('enabled', '2');
+dbUpdate(array('value' => '2'), 'callback', '`name` = "enabled"', array());

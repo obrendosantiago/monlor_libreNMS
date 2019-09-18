@@ -15,16 +15,18 @@
  * @author     LibreNMS Contributors
 */
 
+use LibreNMS\Authentication\LegacyAuth;
+
 $graph_type = 'storage_usage';
 
 $where = 1;
 
 $sql = ' FROM `storage` AS `S` LEFT JOIN `devices` AS `D` ON `S`.`device_id` = `D`.`device_id`';
 
-if (!Auth::user()->hasGlobalRead()) {
+if (!LegacyAuth::user()->hasGlobalRead()) {
     $sql    .= ' LEFT JOIN `devices_perms` AS `DP` ON `S`.`device_id` = `DP`.`device_id`';
     $where  .= ' AND `DP`.`user_id`=?';
-    $param[] = Auth::id();
+    $param[] = LegacyAuth::id();
 }
 
 $sql .= " WHERE $where";
@@ -65,8 +67,8 @@ foreach (dbFetchRows($sql, $param) as $drive) {
 
     $graph_array['type']        = $graph_type;
     $graph_array['id']          = $drive['storage_id'];
-    $graph_array['from'] = \LibreNMS\Config::get('time.day');
-    $graph_array['to'] = \LibreNMS\Config::get('time.now');
+    $graph_array['from']        = $config['time']['day'];
+    $graph_array['to']          = $config['time']['now'];
     $graph_array['height']      = '20';
     $graph_array['width']       = '80';
     $graph_array_zoom           = $graph_array;
@@ -87,7 +89,7 @@ foreach (dbFetchRows($sql, $param) as $drive) {
     if ($vars['view'] == 'graphs') {
         $graph_array['height'] = '100';
         $graph_array['width']  = '216';
-        $graph_array['to'] = \LibreNMS\Config::get('time.now');
+        $graph_array['to']     = $config['time']['now'];
         $graph_array['id']     = $drive['storage_id'];
         $graph_array['type']   = $graph_type;
 

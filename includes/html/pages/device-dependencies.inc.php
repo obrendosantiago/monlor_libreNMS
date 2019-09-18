@@ -12,6 +12,8 @@
  */
 
 
+use LibreNMS\Authentication\LegacyAuth;
+
 $no_refresh = true;
 
 $pagetitle[] = 'Device Dependencies';
@@ -57,7 +59,7 @@ var grid = $("#hostdeps").bootgrid({
     templates: {
         header: '<div id="{{ctx.id}}" class="{{css.header}}"> \
                     <div class="row"> \
-<?php if (Auth::user()->hasGlobalAdmin()) { ?>
+<?php if (LegacyAuth::user()->hasGlobalAdmin()) { ?>
                         <div class="col-sm-8 actionBar"> \
                             <span class="pull-left"> \
                             <button type="button" class="btn btn-primary btn-sm command-manage" data-toggle="modal" data-target="#manage-dependencies" data-template_id="">Manage Device Dependencies</button> \

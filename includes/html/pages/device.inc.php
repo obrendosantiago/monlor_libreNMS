@@ -1,7 +1,7 @@
 <?php
 
 use App\Models\PortsNac;
-use LibreNMS\Config;
+use LibreNMS\Authentication\LegacyAuth;
 
 if (!is_numeric($vars['device'])) {
     $vars['device'] = getidbyname($vars['device']);
@@ -31,7 +31,7 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
     $component_count = $component->getComponentCount($device['device_id']);
 
     $alert_class = '';
-    if ($device['disabled'] == '1') {
+    if ($device['disabled'] == '1' || $device['ignore'] == '1') {
         $alert_class = 'alert-info';
     } elseif ($device['status'] == '0') {
         $alert_class = 'alert-danger';
@@ -47,7 +47,7 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
     if (device_permitted($device['device_id'])) {
         echo '<ul class="nav nav-tabs">';
 
-        if (Config::get('show_overview_tab')) {
+        if ($config['show_overview_tab']) {
             echo '
                 <li role="presentation" '.$select['overview'].'>
                 <a href="'.generate_device_url($device, array('tab' => 'overview')).'">
@@ -92,7 +92,7 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
                 </li>';
         }
 
-        if (Config::has('collectd_dir') && is_dir(Config::get('collectd_dir') . '/' . $device['hostname'] . '/')) {
+        if (isset($config['collectd_dir']) && is_dir($config['collectd_dir'].'/'.$device['hostname'].'/')) {
             echo '<li role="presentation" '.$select['collectd'].'>
                 <a href="'.generate_device_url($device, array('tab' => 'collectd')).'">
                 <i class="fa fa-pie-chart fa-lg icon-theme" aria-hidden="true"></i> CollectD
@@ -306,7 +306,7 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
                 </li>';
         }
 
-        if (Config::get('enable_inventory')) {
+        if ($config['enable_inventory']) {
             if (dbFetchCell("SELECT 1 FROM `entPhysical` WHERE device_id = ?", array($device['device_id']))) {
                 echo '<li role="presentation" ' . $select['entphysical'] . '>
                     <a href="' . generate_device_url($device, array('tab' => 'entphysical')) . '">
@@ -322,7 +322,7 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
             }
         }
 
-        if (Config::get('show_services')) {
+        if ($config['show_services']) {
             echo '<li role="presentation" '.$select['services'].'>
                 <a href="'.generate_device_url($device, array('tab' => 'services')).'">
                 <i class="fa fa-cogs fa-lg icon-theme"  aria-hidden="true"></i> Services
@@ -356,8 +356,12 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
             </a>
             </li>';
 
-        if (Auth::user()->hasGlobalAdmin()) {
-            foreach ((array)Config::get('rancid_configs', []) as $configs) {
+        if (LegacyAuth::user()->hasGlobalAdmin()) {
+            if (!is_array($config['rancid_configs'])) {
+                $config['rancid_configs'] = array($config['rancid_configs']);
+            }
+
+            foreach ($config['rancid_configs'] as $configs) {
                 if ($configs[(strlen($configs) - 1)] != '/') {
                     $configs .= '/';
                 }
@@ -367,15 +371,15 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
                 } elseif (is_file($configs.strtok($device['hostname'], '.'))) { // Strip domain
                     $device_config_file = $configs.strtok($device['hostname'], '.');
                 } else {
-                    if (!empty(Config::get('mydomain'))) { // Try with domain name if set
-                        if (is_file($configs . $device['hostname'] . '.' . Config::get('mydomain'))) {
-                            $device_config_file = $configs . $device['hostname'] . '.' . Config::get('mydomain');
+                    if (!empty($config['mydomain'])) { // Try with domain name if set
+                        if (is_file($configs.$device['hostname'].'.'.$config['mydomain'])) {
+                            $device_config_file = $configs.$device['hostname'].'.'.$config['mydomain'];
                         }
                     }
                 } // end if
             }
 
-            if (Config::get('oxidized.enabled') === true && !in_array($device['type'], Config::get('oxidized.ignore_types')) && Config::has('oxidized.url')) {
+            if ($config['oxidized']['enabled'] === true && !in_array($device['type'], $config['oxidized']['ignore_types']) && isset($config['oxidized']['url'])) {
                 $device_config_file = true;
             }
         }
@@ -390,16 +394,23 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
             }
         }
 
-        if (Config::get('nfsen_enable')) {
-            foreach ((array)Config::get('nfsen_rrds', []) as $nfsenrrds) {
+        if ($config['nfsen_enable']) {
+            if (!is_array($config['nfsen_rrds'])) {
+                $config['nfsen_rrds'] = array($config['nfsen_rrds']);
+            }
+
+            foreach ($config['nfsen_rrds'] as $nfsenrrds) {
                 if ($nfsenrrds[(strlen($nfsenrrds) - 1)] != '/') {
                     $nfsenrrds .= '/';
                 }
 
-                $nfsensuffix = Config::get('nfsen_suffix', '');
+                $nfsensuffix = '';
+                if ($config['nfsen_suffix']) {
+                    $nfsensuffix = $config['nfsen_suffix'];
+                }
 
-                if (Config::get('nfsen_split_char')) {
-                    $basefilename_underscored = preg_replace('/\./', Config::get('nfsen_split_char'), $device['hostname']);
+                if (isset($config['nfsen_split_char']) && !empty($config['nfsen_split_char'])) {
+                    $basefilename_underscored = preg_replace('/\./', $config['nfsen_split_char'], $device['hostname']);
                 } else {
                     $basefilename_underscored = $device['hostname'];
                 }
@@ -454,17 +465,11 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
                   <span class="caret"></span></button>
                   <ul class="dropdown-menu">
                     <li><a href="https://'.$device['hostname'].'" onclick="http_fallback(this); return false;" target="_blank" rel="noopener"><i class="fa fa-globe fa-lg icon-theme"  aria-hidden="true"></i> Web</a></li>';
-
-        foreach (Config::get('html.device.links') as $links) {
-            $html_link = view(['template' => $links['url']], ['device' => $device])->__toString();
-            echo '<li><a href="'.$html_link.'" onclick="http_fallback(this); return false;" target="_blank" rel="noopener"><i class="fa fa-globe fa-lg icon-theme" aria-hidden="true"></i> '.$links['title'].'</a></li>';
-        }
-
-        if (Config::has('gateone.server')) {
-            if (Config::get('gateone.use_librenms_user') == true) {
-                echo '<li><a href="' . Config::get('gateone.server') . '?ssh=ssh://' . Auth::user()->username . '@' . $device['hostname'] . '&location=' . $device['hostname'] . '" target="_blank" rel="noopener"><i class="fa fa-lock fa-lg icon-theme" aria-hidden="true"></i> SSH</a></li>';
+        if (isset($config['gateone']['server'])) {
+            if ($config['gateone']['use_librenms_user'] == true) {
+                    echo '<li><a href="' . $config['gateone']['server'] . '?ssh=ssh://' . LegacyAuth::user()->username . '@' . $device['hostname'] . '&location=' . $device['hostname'] .'" target="_blank" rel="noopener"><i class="fa fa-lock fa-lg icon-theme" aria-hidden="true"></i> SSH</a></li>';
             } else {
-                echo '<li><a href="' . Config::get('gateone.server') . '?ssh=ssh://' . $device['hostname'] . '&location=' . $device['hostname'] . '" target="_blank" rel="noopener"><i class="fa fa-lock fa-lg icon-theme" aria-hidden="true"></i> SSH</a></li>';
+                    echo '<li><a href="' . $config['gateone']['server'] . '?ssh=ssh://' . $device['hostname'] . '&location=' . $device['hostname'] .'" target="_blank" rel="noopener"><i class="fa fa-lock fa-lg icon-theme" aria-hidden="true"></i> SSH</a></li>';
             }
         } else {
             echo '<li><a href="ssh://'.$device['hostname'].'" target="_blank" rel="noopener"><i class="fa fa-lock fa-lg icon-theme"  aria-hidden="true"></i> SSH</a></li>
@@ -472,7 +477,7 @@ if (device_permitted($vars['device']) || $permitted_by_port) {
         }
             echo '<li><a href="telnet://'.$device['hostname'].'" target="_blank" rel="noopener"><i class="fa fa-terminal fa-lg icon-theme"  aria-hidden="true"></i> Telnet</a></li>';
 
-        if (Auth::user()->hasGlobalAdmin()) {
+        if (LegacyAuth::user()->hasGlobalAdmin()) {
             echo '<li>
                 <a href="'.generate_device_url($device, array('tab' => 'edit')).'">
                 <i class="fa fa-pencil fa-lg icon-theme"  aria-hidden="true"></i> Edit </a>

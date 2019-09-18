@@ -15,8 +15,6 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use LibreNMS\Config;
-
 /*
  * Bind9 Query Graph
  * @author Daniel Preussker <f0o@devilcode.org>
@@ -48,7 +46,7 @@ $array        = array(
 $colours      = 'merged';
 $rrd_list     = array();
 
-Config::set('graph_colours.merged', array_merge(Config::get('graph_colours.greens'), Config::get('graph_colours.blues')));
+$config['graph_colours']['merged'] = array_merge($config['graph_colours']['greens'], $config['graph_colours']['blues']);
 
 if (rrdtool_check_rrd_exists($rrd_filename)) {
     foreach ($array as $ds) {

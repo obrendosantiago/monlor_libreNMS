@@ -24,11 +24,5 @@
  */
 
 $hardware = snmp_get($device, 'powerSystemModel.0', '-Ovqa', 'SP2-MIB');
-$sw_version1 = snmp_get($device, 'controlUnitSwVersion.1', '-Ovqa', 'SP2-MIB');
-$sw_version2 = snmp_get($device, 'controlUnitSwVersion.2', '-Ovqa', 'SP2-MIB');
-if (!empty($sw_version1)) {
-    $version = $sw_version1;
-} elseif (!empty($sw_version2)) {
-    $version = $sw_version2;
-}
+$version = snmp_get($device, 'controlUnitSwVersion.1', '-Ovqa', 'SP2-MIB');
 $serial = snmp_get($device, 'powerSystemSerialNumber.0', '-Ovqa', 'SP2-MIB');

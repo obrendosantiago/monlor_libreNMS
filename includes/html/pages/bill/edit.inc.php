@@ -7,7 +7,7 @@ $no_refresh = true;
   
   // This needs more verification. Is it already added? Does it exist?
   // Calculation to extract MB/GB/TB of Kbps/Mbps/Gbps
-$base = \LibreNMS\Config::get('billing.base');
+  $base = $config['billing']['base'];
   
 if ($bill_data['bill_type'] == 'quota') {
     $data      = $bill_data['bill_quota'];
@@ -69,7 +69,6 @@ if ($bill_data['bill_type'] == 'cdr') {
         </div>
         <div class="panel-body">
             <form id="edit" name="edit" method="post" action="" class="form-horizontal" role="form">
-                <?php echo csrf_field() ?>
               <input type=hidden name="action" value="update_bill">
               <script type="text/javascript">
                 function billType() {
@@ -114,7 +113,6 @@ if ($bill_data['bill_type'] == 'cdr') {
         ?>
                 <div class="list-group-item">
                     <form action="" class="form-inline" method="post" name="delete<?php echo $port['port_id'] ?>" style="display: none;">
-                        <?php echo csrf_field() ?>
                         <input type="hidden" name="action" value="delete_bill_port" />
                         <input type="hidden" name="port_id" value="<?php echo $port['port_id'] ?>" />
                     </form>
@@ -142,7 +140,6 @@ if (!$emptyCheck) { ?>
         <h4>Add Port</h4>
         
         <form action="" method="post" class="form-horizontal" role="form">
-            <?php echo csrf_field() ?>
             <input type="hidden" name="action" value="add_bill_port" />
             <input type="hidden" name="bill_id" value="<?php echo $bill_id; ?>" />
             

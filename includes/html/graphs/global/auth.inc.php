@@ -1,5 +1,7 @@
 <?php
 
-if (Auth::user()->hasGlobalRead()) {
+use LibreNMS\Authentication\LegacyAuth;
+
+if (LegacyAuth::user()->hasGlobalRead()) {
     $auth = 1;
 }

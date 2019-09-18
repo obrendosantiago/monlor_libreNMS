@@ -28,10 +28,11 @@ use Illuminate\Filesystem\Filesystem;
 use Illuminate\Translation\FileLoader;
 use Illuminate\Translation\Translator;
 use Illuminate\Validation\Factory;
+use LibreNMS\Authentication\LegacyAuth;
 
 header('Content-type: application/json');
 
-if (!Auth::user()->hasGlobalAdmin()) {
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     die(json_encode([
         'status' => 'error',
         'message' => 'You need to be admin'
@@ -90,23 +91,29 @@ if (empty($name)) {
             }
             $status = 'error';
         } else {
-            $transport_config = (array)json_decode(dbFetchCell('SELECT transport_config FROM alert_transports WHERE transport_id=?', [$transport_id]), true);
+            $transport_config = json_decode(dbFetchCell('SELECT transport_config FROM alert_transports WHERE transport_id=?', [$transport_id]), true);
             foreach ($result['config'] as $tmp_config) {
                 if (isset($tmp_config['name']) && $tmp_config['type'] !== 'hidden') {
                     $transport_config[$tmp_config['name']] = $vars[$tmp_config['name']];
                 }
             }
             //Update the json config field
-            $detail = [
-                'transport_type' => $transport_type,
-                'transport_config' => json_encode($transport_config)
-            ];
-            $where = 'transport_id=?';
+            if ($transport_config) {
+                $transport_config = json_encode($transport_config);
+                $detail = [
+                    'transport_type' => $transport_type,
+                    'transport_config' => $transport_config
+                ];
+                $where = 'transport_id=?';
 
-            dbUpdate($detail, 'alert_transports', $where, [$transport_id]);
+                dbUpdate($detail, 'alert_transports', $where, [$transport_id]);
 
-            $status = 'ok';
-            $message = 'Updated alert transports';
+                $status = 'ok';
+                $message = 'Updated alert transports';
+            } else {
+                $status = 'error';
+                $message = 'There was an issue with the transport config';
+            }
         }
         if ($status == 'error' && $newEntry) {
             //If error, we will have to delete the new entry in alert_transports tbl

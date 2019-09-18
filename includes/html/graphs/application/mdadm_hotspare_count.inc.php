@@ -1,6 +1,6 @@
 <?php
 $unit_text     = 'Hotspare Disc Count';
-$unitlen       = 20;
+$unitlen       = 10;
 $bigdescrlen   = 15;
 $smalldescrlen = 15;
 

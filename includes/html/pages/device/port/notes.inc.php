@@ -16,7 +16,6 @@ $data = get_dev_attrib($device, $port_id_notes);
 ?>
 
 <form class="form-horizontal" action="" method="post">
-    <?php echo csrf_field() ?>
     <h3>Port Notes</h3>
     <hr>
     <div class="form-group">

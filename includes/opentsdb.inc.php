@@ -14,10 +14,10 @@
 function opentsdb_update($device, $measurement, $tags, $fields)
 {
 
-    global $opentsdb;
-    if (\LibreNMS\Config::get('opentsdb.enable') == true) {
+    global $config, $opentsdb;
+    if ($config['opentsdb']['enable'] == true) {
         if ($opentsdb != true) {
-            $opentsdb = fsockopen(\LibreNMS\Config::get('opentsdb.host'), \LibreNMS\Config::get('opentsdb.port'));
+            $opentsdb = fsockopen($config['opentsdb']['host'], $config['opentsdb']['port']);
         }
         if ($opentsdb == true) {
             d_echo("Connection to OpenTSDB is done\n");
@@ -25,7 +25,7 @@ function opentsdb_update($device, $measurement, $tags, $fields)
             d_echo("Connection to OpenTSDB has failed\n");
         }
 
-        $flag = \LibreNMS\Config::get('opentsdb.co');
+          $flag=$config['opentsdb']['co'];
           $timestamp = time();
           $tmp_tags = "hostname=".$device['hostname'];
 

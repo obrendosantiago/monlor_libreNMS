@@ -13,7 +13,7 @@
  * the source code distribution for details.
  */
 
-if (\LibreNMS\Config::get("poller_modules.mib")) {
+if (is_module_enabled('poller', 'mib')) {
 ?>
 
 <h4><i class="fa fa-file-text-o"></i> All MIB definitions</h4>

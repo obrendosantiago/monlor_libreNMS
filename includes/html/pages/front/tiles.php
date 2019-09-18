@@ -12,8 +12,6 @@
  * the source code distribution for details.
  */
 
-use LibreNMS\Config;
-
 /*
  * Code for Gridster.sort_by_row_and_col_asc(serialization) call is from http://gridster.net/demos/grid-from-serialize.html
  */
@@ -37,7 +35,7 @@ list($user_dashboards, $shared_dashboards) = array_reduce($dashboards, function 
 
 // if the default dashboard doesn't exist, set it to the global default or to 0
 if (!isset($dashboards[$default_dash])) {
-    $global_default = (int)Config::get('webui.default_dashboard_id');
+    $global_default = (int)$config['webui']['default_dashboard_id'];
     $default_dash = isset($dashboards[$global_default]) ? $global_default : 0;
 }
 
@@ -106,7 +104,7 @@ if (empty($vars['bare']) || $vars['bare'] == "no") {
     $nodash = true;
     foreach ($user_dashboards as $dash) {
         if ($dash['dashboard_id'] != $vars['dashboard']['dashboard_id']) {
-            echo '          <li><a href="' . rtrim(Config::get('base_url'), '/') . '/overview/dashboard=' . $dash['dashboard_id'] . '">' . $dash['dashboard_name'] . '</a></li>';
+            echo '          <li><a href="'.rtrim($config['base_url'], '/').'/overview/dashboard='.$dash['dashboard_id'].'">'.$dash['dashboard_name'].'</a></li>';
             $nodash = false;
         }
     }
@@ -119,7 +117,7 @@ if (empty($vars['bare']) || $vars['bare'] == "no") {
         echo '          <li class="dropdown-header">Shared Dashboards</li>';
         foreach ($shared_dashboards as $dash) {
             if ($dash['dashboard_id'] != $vars['dashboard']['dashboard_id']) {
-                echo '          <li><a href="' . rtrim(Config::get('base_url'), '/') . '/overview/dashboard=' . $dash['dashboard_id'] . '">&nbsp;&nbsp;&nbsp;' . $dash['username'] . ':' . $dash['dashboard_name'] . ($dash['access'] == 1 ? ' (Read)' : '') . '</a></li>';
+                echo '          <li><a href="'.rtrim($config['base_url'], '/').'/overview/dashboard='.$dash['dashboard_id'].'">&nbsp;&nbsp;&nbsp;'.$dash['username'].':'.$dash['dashboard_name'].($dash['access'] == 1 ? ' (Read)' : '').'</a></li>';
             }
         }
     }
@@ -136,7 +134,6 @@ if (empty($vars['bare']) || $vars['bare'] == "no") {
   <div class="row" style="margin-top:5px;">
     <div class="col-md-6">
       <form class="form-inline" onsubmit="dashboard_add(this); return false;" name="add_form" id="add_form">
-        <?php echo csrf_field() ?>
         <div class="col-sm-3 col-sx-6">
           <div class="input-group">
             <span class="input-group-btn">
@@ -159,7 +156,6 @@ if (empty($vars['bare']) || $vars['bare'] == "no") {
     <div class="col-md-12">
       <div class="col-md-12">
         <form class="form-inline" onsubmit="dashboard_edit(this); return false;">
-            <?php echo csrf_field() ?>
           <div class="form-group">
             <div class="input-group">
               <span class="input-group-btn">
@@ -476,7 +472,7 @@ if (empty($vars['bare']) || $vars['bare'] == "no") {
                 if( data.status == "ok" ) {
                     toastr.success(data.message);
                     setTimeout(function (){
-                        window.location.href = "<?php echo rtrim(Config::get('base_url'), '/'); ?>/overview";
+                        window.location.href="<?php echo rtrim($config['base_url'], '/'); ?>/overview";
                     }, 500);
 
                 } else {
@@ -517,7 +513,7 @@ if (empty($vars['bare']) || $vars['bare'] == "no") {
                     if (data.status == "ok") {
                         toastr.success(data.message);
                         setTimeout(function (){
-                            window.location.href = "<?php echo rtrim(Config::get('base_url'), '/'); ?>/overview/dashboard=" + dashboard_id;
+                            window.location.href = "<?php echo rtrim($config['base_url'], '/'); ?>/overview/dashboard=" + dashboard_id;
                         }, 500);
                     }
                     else {
@@ -546,7 +542,7 @@ if (empty($vars['bare']) || $vars['bare'] == "no") {
                 if( data.status == "ok" ) {
                     toastr.success(data.message);
                     setTimeout(function (){
-                        window.location.href = "<?php echo rtrim(Config::get('base_url'), '/'); ?>/overview/dashboard=" + data.dashboard_id;
+                        window.location.href="<?php echo rtrim($config['base_url'], '/'); ?>/overview/dashboard="+data.dashboard_id;
                     }, 500);
                 }
                 else {

@@ -18,6 +18,7 @@
 * @copyright  2016 crcro
 * @author     Cercel Valentin <crc@nuamchefazi.ro>
 */
+global $config;
 
 $graphs = array(
     'ups-apcups_remaining' => 'Remaining time:',
@@ -30,7 +31,7 @@ foreach ($graphs as $key => $text) {
     $graph_type            = $key;
     $graph_array['height'] = '100';
     $graph_array['width']  = '215';
-    $graph_array['to'] = \LibreNMS\Config::get('time.now');
+    $graph_array['to']     = $config['time']['now'];
     $graph_array['id']     = $app['app_id'];
     $graph_array['type']   = 'application_'.$key;
     echo '<div class="panel panel-default">

@@ -23,7 +23,9 @@
  * @author     Neil Lathwood <neil@lathwood.co.uk>
  */
 
-if (!Auth::user()->hasGlobalAdmin()) {
+use LibreNMS\Authentication\LegacyAuth;
+
+if (!LegacyAuth::user()->hasGlobalAdmin()) {
     die('ERROR: You need to be admin');
 }
 
