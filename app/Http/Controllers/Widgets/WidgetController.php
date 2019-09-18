@@ -26,7 +26,6 @@
 namespace App\Http\Controllers\Widgets;
 
 use App\Http\Controllers\Controller;
-use App\Models\DeviceGroup;
 use App\Models\UserWidget;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -82,17 +81,13 @@ abstract class WidgetController extends Controller
      *
      * @return array
      */
-    public function getSettings($settingsView = false)
+    public function getSettings()
     {
         if (is_null($this->settings)) {
             $id = \Request::get('id');
             $widget = UserWidget::find($id);
             $this->settings = array_replace($this->defaults, $widget ? (array)$widget->settings : []);
             $this->settings['id'] = $id;
-
-            if ($settingsView && isset($this->settings['device_group'])) {
-                $this->settings['device_group'] = DeviceGroup::find($this->settings['device_group']);
-            }
         }
 
         return $this->settings;

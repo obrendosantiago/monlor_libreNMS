@@ -33,9 +33,6 @@ use Illuminate\View\View;
 class ComponentStatusController extends WidgetController
 {
     protected $title = 'Component Status';
-    protected $defaults = [
-        'device_group' => null,
-    ];
 
     /**
      * @param Request $request
@@ -43,7 +40,6 @@ class ComponentStatusController extends WidgetController
      */
     public function getView(Request $request)
     {
-        $data = $this->getSettings();
         $status = [
             [
                 'color' => 'text-success',
@@ -62,10 +58,6 @@ class ComponentStatusController extends WidgetController
         $component_status = Component::query()
             ->select('status', DB::raw("count('status') as total"))
             ->groupBy('status')
-            ->where('disabled', "!=", 0)
-            ->when($data['device_group'], function ($query) use ($data) {
-                $query->inDeviceGroup($data['device_group']);
-            })
             ->get()->pluck('total', 'status')->toArray();
 
         foreach ($status as $key => $value) {
@@ -73,10 +65,5 @@ class ComponentStatusController extends WidgetController
         }
 
         return view('widgets.component-status', compact('status'));
-    }
-
-    public function getSettingsView(Request $request)
-    {
-        return view('widgets.settings.component-status', $this->getSettings(true));
     }
 }

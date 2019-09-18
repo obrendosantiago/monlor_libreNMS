@@ -62,10 +62,10 @@ class ImageController extends WidgetController
 
     public function getSettingsView(Request $request)
     {
-        return view('widgets.settings.image', $this->getSettings(true));
+        return view('widgets.settings.image', $this->getSettings());
     }
 
-    public function getSettings($settingsView = false)
+    public function getSettings()
     {
         if (is_null($this->settings)) {
             parent::getSettings();

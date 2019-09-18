@@ -42,13 +42,12 @@ class GlobeController extends WidgetController
             'markers' => Config::get('frontpage_globe.markers', 'devices'),
             'region' => Config::get('frontpage_globe.region', 'world'),
             'resolution' => Config::get('frontpage_globe.resolution', 'countries'),
-            'device_group' => null,
         ];
     }
 
     public function getSettingsView(Request $request)
     {
-        return view('widgets.settings.globe', $this->getSettings(true));
+        return view('widgets.settings.globe', $this->getSettings());
     }
 
     /**
@@ -61,14 +60,9 @@ class GlobeController extends WidgetController
         $locations = collect();
 
         $eager_load = $data['markers'] == 'ports' ? ['devices.ports'] : ['devices'];
-        $query = Location::hasAccess($request->user())
-            ->with($eager_load)
-            ->when($data['device_group'], function ($query) use ($data) {
-                $query->inDeviceGroup($data['device_group']);
-            });
 
         /** @var Location $location */
-        foreach ($query->get() as $location) {
+        foreach (Location::hasAccess($request->user())->with($eager_load)->get() as $location) {
             $count = 0;
             $up = 0;
             $down_items = collect();

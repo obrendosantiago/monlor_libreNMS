@@ -78,4 +78,9 @@ class LegacyController extends Controller
             'refresh' => $no_refresh ? 0 : Config::get('page_refresh'),
         ]);
     }
+
+    public function api($path = '')
+    {
+        include base_path('includes/html/legacy_api_v0.php');
+    }
 }

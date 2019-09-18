@@ -38,7 +38,6 @@ class GraylogController extends WidgetController
         'device' => null,
         'range' => null,
         'limit' => 15,
-        'loglevel' => null,
     ];
 
     /**
@@ -52,7 +51,7 @@ class GraylogController extends WidgetController
 
     public function getSettingsView(Request $request)
     {
-        $data = $this->getSettings(true);
+        $data = $this->getSettings();
 
         if ($data['device']) {
             $data['device'] = Device::find($data['device']);

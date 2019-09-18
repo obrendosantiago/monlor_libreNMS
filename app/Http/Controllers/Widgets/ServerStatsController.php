@@ -77,15 +77,15 @@ class ServerStatsController extends WidgetController
 
     public function getSettingsView(Request $request)
     {
-        $settings = $this->getSettings(true);
+        $settings = $this->getSettings();
         $settings['device'] = Device::hasAccess($request->user())->find($settings['device']) ?: null;
 
         return view('widgets.settings.server-stats', $settings);
     }
 
-    public function getSettings($settingsView = false)
+    public function getSettings()
     {
-        $settings = parent::getSettings($settingsView);
+        $settings = parent::getSettings();
         $settings['columns'] = 12 / $settings['columnsize'];
 
         return $settings;

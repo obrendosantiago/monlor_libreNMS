@@ -27,7 +27,6 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
-use App\Models\AuthLog;
 use App\Models\Dashboard;
 use App\Models\User;
 use App\Models\UserPref;
@@ -212,14 +211,5 @@ class UserController extends Controller
         }
 
         return false;
-    }
-
-    public function authlog()
-    {
-        $this->authorize('manage', User::class);
-
-        return view('user.authlog', [
-            'authlog' => AuthLog::orderBy('datetime', 'DESC')->get(),
-        ]);
     }
 }

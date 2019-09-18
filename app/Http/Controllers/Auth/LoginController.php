@@ -47,7 +47,7 @@ class LoginController extends Controller
     public function showLoginForm()
     {
         if (Config::get('public_status')) {
-            $devices = Device::isActive()->with('location')->get();
+            $devices = Device::isActive()->get();
             return view('auth.public-status')->with('devices', $devices);
         }
         return view('auth.login');

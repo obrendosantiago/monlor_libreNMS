@@ -120,7 +120,7 @@ class DeviceController extends TableController
     {
         return [
             'extra' => $this->getLabel($device),
-            'status' => $this->getStatus($device),
+            'status' => $device->statusName(),
             'icon' => '<img src="' . asset($device->icon) . '" title="' . pathinfo($device->icon, PATHINFO_FILENAME) . '">',
             'hostname' => $this->getHostname($device),
             'metrics' => $this->getMetrics($device),
@@ -133,42 +133,21 @@ class DeviceController extends TableController
     }
 
     /**
-     * Get the device up/down status
-     * @param Device $device
-     * @return string
-     */
-    private function getStatus($device)
-    {
-        if ($device->disabled == 1) {
-            return 'disabled';
-        } elseif ($device->status == 0) {
-            return 'down';
-        }
-
-        return 'up';
-    }
-
-    /**
      * Get the status label class
      * @param Device $device
      * @return string
      */
     private function getLabel($device)
     {
-        if ($device->disabled == 1) {
-            return 'blackbg';
-        } elseif ($device->ignore == 1) {
+        if ($device->disabled) {
             return 'label-default';
-        } elseif ($device->status == 0) {
-            return 'label-danger';
-        } else {
-            $warning_time = \LibreNMS\Config::get('uptime_warning', 84600);
-            if ($device->uptime < $warning_time && $device->uptime != 0) {
-                return 'label-warning';
-            }
-
-            return 'label-success';
         }
+
+        if ($device->ignore) {
+            return 'label-default';
+        }
+
+        return $device->status ? 'label-success' : 'label-danger';
     }
 
     /**
@@ -251,9 +230,15 @@ class DeviceController extends TableController
      */
     private function getLocation($device)
     {
-        return extension_loaded('mbstring')
-            ? mb_substr($device->location, 0, 32, 'utf8')
-            : substr($device->location, 0, 32);
+        if ($device->location) {
+            if (extension_loaded('mbstring')) {
+                return mb_substr($device->location->location, 0, 32, 'utf8');
+            } else {
+                return substr($device->location->location, 0, 32);
+            }
+        }
+
+        return '';
     }
 
     /**

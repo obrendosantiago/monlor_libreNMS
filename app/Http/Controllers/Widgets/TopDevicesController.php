@@ -50,7 +50,6 @@ class TopDevicesController extends WidgetController
         'sort_order' => 'asc',
         'device_count' => 5,
         'time_interval' => 15,
-        'device_group' => null,
     ];
 
     public function title()
@@ -99,7 +98,7 @@ class TopDevicesController extends WidgetController
 
     public function getSettingsView(Request $request)
     {
-        return view('widgets.settings.top-devices', $this->getSettings(true));
+        return view('widgets.settings.top-devices', $this->getSettings());
     }
 
     /**
@@ -131,10 +130,7 @@ class TopDevicesController extends WidgetController
             ->select("$left_table.device_id")
             ->leftJoin('devices', "$left_table.device_id", 'devices.device_id')
             ->groupBy("$left_table.device_id")
-            ->where('devices.last_polled', '>', Carbon::now()->subMinutes($settings['time_interval']))
-            ->when($settings['device_group'], function ($query) use ($settings) {
-                $query->inDeviceGroup($settings['device_group']);
-            });
+            ->where('devices.last_polled', '>', Carbon::now()->subMinutes($settings['time_interval']));
     }
 
     /**
@@ -147,9 +143,6 @@ class TopDevicesController extends WidgetController
 
         return Device::hasAccess(Auth::user())->select('device_id', 'hostname', 'sysName', 'status')
             ->where('devices.last_polled', '>', Carbon::now()->subMinutes($settings['time_interval']))
-            ->when($settings['device_group'], function ($query) use ($settings) {
-                $query->inDeviceGroup($settings['device_group']);
-            })
             ->limit($settings['device_count']);
     }
 
@@ -186,11 +179,7 @@ class TopDevicesController extends WidgetController
             ->select('device_id')
             ->groupBy('device_id')
             ->where('poll_time', '>', Carbon::now()->subMinutes($settings['time_interval'])->timestamp)
-            ->when($settings['device_group'], function ($query) use ($settings) {
-                $query->inDeviceGroup($settings['device_group']);
-            }, function ($query) {
-                $query->has('device');
-            })
+            ->has('device')
             ->orderByRaw('SUM(ifInOctets_rate + ifOutOctets_rate) ' . $sort)
             ->limit($settings['device_count']);
 
@@ -286,11 +275,9 @@ class TopDevicesController extends WidgetController
             ->leftJoin('devices', 'storage.device_id', 'devices.device_id')
             ->select('storage.device_id', 'storage_id', 'storage_descr', 'storage_perc', 'storage_perc_warn')
             ->where('devices.last_polled', '>', Carbon::now()->subMinutes($settings['time_interval']))
-            ->when($settings['device_group'], function ($query) use ($settings) {
-                $query->inDeviceGroup($settings['device_group']);
-            })
             ->orderBy('storage_perc', $sort)
             ->limit($settings['device_count']);
+
 
         $results = $query->get()->map(function ($storage) {
             $device = $storage->device;

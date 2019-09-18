@@ -37,8 +37,6 @@ use Illuminate\Support\Collection;
 use LibreNMS\Config;
 use LibreNMS\RRD\RrdDefinition;
 use Symfony\Component\Process\Process;
-use LibreNMS\Alert\AlertRules;
-use Log;
 
 class PingCheck implements ShouldQueue
 {
@@ -250,14 +248,12 @@ class PingCheck implements ShouldQueue
                 // if changed, update reason
                 $device->status_reason = $device->status ? '' : 'icmp';
                 $type = $device->status ? 'up' : 'down';
-                Log::event('Device status changed to ' . ucfirst($type) . " from icmp check.", $device->device_id, $type);
+                log_event('Device status changed to ' . ucfirst($type) . " from icmp check.", $device->toArray(), $type);
+
+                echo "Device $device->hostname changed status to $type, running alerts\n";
+                RunRules($device->device_id);
             }
-
             $device->save(); // only saves if needed (which is every time because of last_ping)
-
-            echo "Device $device->hostname changed status to $type, running alerts\n";
-            $rules = new AlertRules;
-            $rules->runRules($device->device_id);
 
             // add data to rrd
             data_update($device->toArray(), 'ping-perf', $this->rrd_tags, ['ping' => $device->last_ping_timetaken]);

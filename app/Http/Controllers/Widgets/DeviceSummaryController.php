@@ -47,7 +47,9 @@ abstract class DeviceSummaryController extends WidgetController
 
     public function getSettingsView(Request $request)
     {
-        return view('widgets.settings.device-summary', $this->getSettings(true));
+        $settings = $this->getSettings();
+
+        return view('widgets.settings.device-summary', $settings);
     }
 
     protected function getData(Request $request)
