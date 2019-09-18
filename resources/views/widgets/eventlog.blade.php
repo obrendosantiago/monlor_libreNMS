@@ -19,7 +19,6 @@
         {
             return {
                 device: "{{ $device }}",
-                device_group: "{{ $device_group }}",
                 eventtype: "{{ $eventtype }}"
             };
         },

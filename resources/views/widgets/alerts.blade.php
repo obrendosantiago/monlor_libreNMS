@@ -12,7 +12,6 @@
             <th data-column-id="rule">Rule</th>
             <th data-column-id="details" data-sortable="false"></th>
             <th data-column-id="hostname">Hostname</th>
-            <th data-column-id="location" data-visible="{{ $location ? 'true' : 'false' }}">Location</th>
             <th data-column-id="ack_ico" data-sortable="false">ACK</th>
             <th data-column-id="notes" data-sortable="false">Notes</th>
             <th data-column-id="proc" data-sortable="false" data-visible="{{ $proc ? 'true' : 'false' }}">URL</th>
@@ -30,7 +29,7 @@
                 acknowledged: '{{ $acknowledged }}',
                 fired: '{{ $fired }}',
                 min_severity: '{{ $min_severity }}',
-                group: '{{ $device_group }}',
+                group: '{{ $group }}',
                 proc: '{{ $proc }}',
                 sort: '{{ $sort }}',
                 device_id: '{{ $device }}'

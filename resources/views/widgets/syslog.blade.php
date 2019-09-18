@@ -3,12 +3,12 @@
         <thead>
         <tr>
             <th data-column-id="label"></th>
-            <th data-column-id="timestamp" data-order="desc">@lang('Timestamp')</th>
-            <th data-column-id="level">@lang('Level')</th>
-            <th data-column-id="device_id">@lang('Hostname')</th>
-            <th data-column-id="program">@lang('Program')</th>
-            <th data-column-id="msg">@lang('Message')</th>
-            <th data-column-id="priority">@lang('Priority')</th>
+            <th data-column-id="timestamp" data-order="desc">Timestamp</th>
+            <th data-column-id="level">Level</th>
+            <th data-column-id="device_id">Hostname</th>
+            <th data-column-id="program">Program</th>
+            <th data-column-id="msg">Message</th>
+            <th data-column-id="priority">Priority</th>
         </tr>
         </thead>
     </table>
@@ -20,8 +20,7 @@
         post: function ()
         {
             return {
-                device: '{{ $device ?: '' }}',
-                device_group: '{{ $device_group }}'
+                device: '{{ $device ?: '' }}'
             };
         },
         url: "{{ url('/ajax/table/syslog') }}"
