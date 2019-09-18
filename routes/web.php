@@ -22,12 +22,9 @@ Route::group(['middleware' => ['auth', '2fa'], 'guard' => 'auth'], function () {
     });
 
     // pages
-    Route::resource('device-groups', 'DeviceGroupController');
     Route::get('locations', 'LocationController@index');
     Route::resource('preferences', 'UserPreferencesController', ['only' => ['index', 'store']]);
     Route::resource('users', 'UserController');
-    Route::get('about', 'AboutController@index');
-    Route::get('authlog', 'UserController@authlog');
 
     // old route redirects
     Route::permanentRedirect('poll-log', 'pollers/tab=log/');
