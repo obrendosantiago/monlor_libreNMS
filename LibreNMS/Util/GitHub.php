@@ -44,21 +44,14 @@ class GitHub
         'feature' => [],
         'enhancement' => [],
         'breaking change' => [],
-        'security' => [],
         'device' => [],
         'webui' => [],
-        'graphs' => [],
         'snmp traps' => [],
-        'applications' => [],
         'api' => [],
         'alerting' => [],
-        'billing' => [],
-        'discovery' => [],
-        'polling' => [],
+        'security' => [],
         'bug' => [],
         'documentation' => [],
-        'translation' => [],
-        'misc' => [],
     ];
     protected $changelog_users = [];
     protected $markdown;
@@ -174,21 +167,13 @@ class GitHub
                 }, $pr['labels']);
 
                 // check valid labels in order
-                $category = 'misc';
                 foreach ($valid_labels as $valid_label) {
-                    if (in_array($valid_label, $labels)) {
-                        $category = $valid_label;
+                    if (in_array($valid_label, $labels) && !in_array('ignore changelog', $labels)) {
+                        $title = ucfirst(trim(preg_replace('/^[\S]+: /', '', $pr['title'])));
+                        $this->changelog[$valid_label][] = "$title ([#{$pr['number']}]({$pr['html_url']})) - [{$pr['user']['login']}]({$pr['user']['html_url']})" . PHP_EOL;
                         break; // only put in the first found label
                     }
                 }
-
-                // only add the changelog if it isn't set to ignore
-                if (!in_array('ignore changelog', $labels)) {
-                    $title = addcslashes(ucfirst(trim(preg_replace('/^[\S]+: /', '', $pr['title']))), '<>');
-                    $this->changelog[$category][] = "$title ([#{$pr['number']}]({$pr['html_url']})) - [{$pr['user']['login']}]({$pr['user']['html_url']})" . PHP_EOL;
-                }
-
-
                 $this->changelog_users[$pr['user']['login']] += 1;
             }
         }

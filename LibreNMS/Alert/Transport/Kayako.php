@@ -12,7 +12,6 @@
 namespace LibreNMS\Alert\Transport;
 
 use LibreNMS\Alert\Transport;
-use LibreNMS\Config;
 
 class Kayako extends Transport
 {
@@ -29,10 +28,11 @@ class Kayako extends Transport
 
     public function contactKayako($host, $kayako)
     {
+        global $config;
         $url   = $kayako['url']."/Tickets/Ticket";
         $key = $kayako['key'];
         $secret = $kayako['secret'];
-        $user = Config::get('email_from');
+        $user = $config['email_from'];
         $department = $kayako['department'];
         $ticket_type= 1;
         $ticket_status = 1;

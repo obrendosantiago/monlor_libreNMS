@@ -43,7 +43,7 @@ use Cache;
 
 class ObjectCache
 {
-    private static $cache_time = 300;
+    private static $cache_time = 5;
 
     public static function applications()
     {
