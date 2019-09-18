@@ -1,7 +1,6 @@
 #!/usr/bin/php
 <?php
 
-use LibreNMS\Config;
 use LibreNMS\Authentication\LegacyAuth;
 
 $options = getopt('u:rldvh');
@@ -24,14 +23,14 @@ require realpath(__DIR__ . '/..') . '/includes/init.php';
 
 if (isset($options['v'])) {
     // Enable debug mode for auth methods that have it
-    Config::set('auth_ad_debug', 1);
-    Config::set('auth_ldap_debug', 1);
+    $config['auth_ad_debug'] = 1;
+    $config['auth_ldap_debug'] = 1;
 }
 
-echo "Authentication Method: " . Config::get('auth_mechanism') . PHP_EOL;
+echo "Authentication Method: {$config['auth_mechanism']}\n";
 
 // if ldap like, check selinux
-if (Config::get('auth_mechanism') == 'ldap' || Config::get('auth_mechanism') == "active_directory") {
+if ($config['auth_mechanism'] == 'ldap' || $config['auth_mechanism'] == "active_directory") {
     $enforce = shell_exec('getenforce 2>/dev/null');
     if (str_contains($enforce, 'Enforcing')) {
         // has selinux
@@ -54,14 +53,14 @@ try {
         $adbind_rm->setAccessible(true);
 
         $bind_success = false;
-        if (Config::has('auth_ad_binduser') && Config::has('auth_ad_bindpassword')) {
+        if (isset($config['auth_ad_binduser']) && isset($config['auth_ad_bindpassword'])) {
             $bind_success = $adbind_rm->invoke($authorizer, false, true);
             if (!$bind_success) {
                 $ldap_error = ldap_error($lc_rp->getValue($authorizer));
                 echo $ldap_error . PHP_EOL;
                 if ($ldap_error == 'Invalid credentials') {
-                    print_error('AD bind failed for user ' . Config::get('auth_ad_binduser') . '@' . Config::get('auth_ad_domain') .
-                        '. Check \'auth_ad_binduser\' and \'auth_ad_bindpassword\' in your config');
+                    print_error('AD bind failed for user ' . $config['auth_ad_binduser'] . '@' . $config['auth_ad_domain'] .
+                        '. Check $config[\'auth_ad_binduser\'] and $config[\'auth_ad_bindpassword\'] in your config.php');
                 }
             } else {
                 print_message('AD bind success');
