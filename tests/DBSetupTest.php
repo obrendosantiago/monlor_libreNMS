@@ -31,7 +31,7 @@ class DBSetupTest extends DBTestCase
 {
     protected $db_name;
 
-    public function setUp(): void
+    public function setUp()
     {
         parent::setUp();
         $this->db_name = dbFetchCell('SELECT DATABASE()');
@@ -51,7 +51,8 @@ class DBSetupTest extends DBTestCase
 
     public function testSchemaFiles()
     {
-        $files = glob(\LibreNMS\Config::get('install_dir') . '/sql-schema/*.sql');
+        global $config;
+        $files = glob($config['install_dir'].'/sql-schema/*.sql');
 
         foreach ($files as $file) {
             $content = file_get_contents($file);

@@ -26,7 +26,6 @@
 namespace LibreNMS\Tests;
 
 use LibreNMS\Authentication\LegacyAuth;
-use LibreNMS\Config;
 use LibreNMS\Exceptions\AuthenticationException;
 
 // Note that as this test set depends on mres(), it is a DBTestCase even though the database is unused
@@ -35,7 +34,8 @@ class AuthHTTPTest extends DBTestCase
     // Document the modules current behaviour, so that changes trigger test failures
     public function testCapabilityFunctions()
     {
-        Config::set('auth_mechanism', 'http-auth');
+        global $config;
+        $config['auth_mechanism'] = 'http-auth';
 
         $a = LegacyAuth::reset();
 
@@ -48,10 +48,12 @@ class AuthHTTPTest extends DBTestCase
 
     public function testOldBehaviourAgainstCurrent()
     {
+        global $config;
+
         $old_username = null;
         $new_username = null;
 
-        Config::set('auth_mechanism', 'http-auth');
+        $config['auth_mechanism'] = 'http-auth';
         $users = array('steve',  '   steve', 'steve   ', '   steve   ', '    steve   ', '', 'CAT');
         $vars = array('REMOTE_USER', 'PHP_AUTH_USER');
 
@@ -64,7 +66,7 @@ class AuthHTTPTest extends DBTestCase
                 // Old Behaviour
                 if (isset($_SERVER['REMOTE_USER'])) {
                     $old_username = clean($_SERVER['REMOTE_USER']);
-                } elseif (isset($_SERVER['PHP_AUTH_USER']) && Config::get('auth_mechanism') === 'http-auth') {
+                } elseif (isset($_SERVER['PHP_AUTH_USER']) && $config['auth_mechanism'] === 'http-auth') {
                     $old_username = clean($_SERVER['PHP_AUTH_USER']);
                 }
 
@@ -82,6 +84,6 @@ class AuthHTTPTest extends DBTestCase
             unset($_SERVER[$v]);
         }
 
-        Config::forget('auth_mechanism');
+        unset($config['auth_mechanism']);
     }
 }

@@ -28,6 +28,8 @@ use LibreNMS\DB\Eloquent;
 use LibreNMS\Exceptions\DatabaseConnectException;
 use LibreNMS\Util\Snmpsim;
 
+global $config;
+
 $install_dir = realpath(__DIR__ . '/..');
 
 $init_modules = array('web', 'discovery', 'polling', 'nodb');
@@ -71,26 +73,27 @@ if (getenv('DBTEST')) {
     $connection->query("CREATE DATABASE IF NOT EXISTS $db_name CHARACTER SET utf8 COLLATE utf8_unicode_ci");
     unset($connection); // close connection
 
-    Eloquent::boot();
-    Eloquent::setStrictMode();
+    \LibreNMS\DB\Eloquent::boot();
+    \LibreNMS\DB\Eloquent::setStrictMode();
 
     $empty_db = (dbFetchCell("SELECT count(*) FROM `information_schema`.`tables` WHERE `table_type` = 'BASE TABLE' AND `table_schema` = ?", [$db_name]) == 0);
 
-    $cmd = Config::get('install_dir') . '/build-base.php';
+    $cmd = $config['install_dir'] . '/build-base.php';
     exec($cmd, $schema);
 
     Config::load(); // reload the config including database config
     load_all_os();
 
     register_shutdown_function(function () use ($empty_db, $sql_mode) {
-        Eloquent::boot();
+        global $config;
+        \LibreNMS\DB\Eloquent::boot();
 
         echo "Cleaning database...\n";
 
         $db_name = dbFetchCell('SELECT DATABASE()');
         if ($empty_db) {
             dbQuery("DROP DATABASE $db_name");
-        } elseif (Config::get('test_db_name') == $db_name) {
+        } elseif (isset($config['test_db_name']) && $config['test_db_name'] == $db_name) {
             // truncate tables
             $tables = dbFetchColumn('SHOW TABLES');
 
