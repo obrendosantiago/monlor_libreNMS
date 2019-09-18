@@ -502,13 +502,7 @@
                 "starts",
                 "ends",
                 "contains",
-                "regex",
-                "not_starts",
-                "not_ends",
-                "not_contains",
-                "not_regex",
-                "in_array",
-                "not_in_array"
+                "regex"
             ]
         }
     }
