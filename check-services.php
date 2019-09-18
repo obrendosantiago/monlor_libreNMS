@@ -22,14 +22,14 @@ if (set_debug(isset($options['d']))) {
 }
 
 if (isset($options['f'])) {
-    \LibreNMS\Config::set('noinfluxdb', true);
+    $config['noinfluxdb'] = true;
 }
 
 if (isset($options['p'])) {
     $prometheus = false;
 }
 
-if (\LibreNMS\Config::get('noinfluxdb') !== true && \LibreNMS\Config::get('influxdb.enable') === true) {
+if ($config['noinfluxdb'] !== true && $config['influxdb']['enable'] === true) {
     $influxdb = influxdb_connect();
 } else {
     $influxdb = false;
@@ -61,18 +61,35 @@ $sql = 'SELECT D.*,S.*,attrib_value  FROM `devices` AS D'
        .' ORDER by D.device_id DESC;';
 
 foreach (dbFetchRows($sql) as $service) {
-    // Run the polling function if service is enabled and the associated device is up, "Disable ICMP Test" option is not enabled,
+    // Run the polling function if the associated device is up, "Disable ICMP Test" option is not enabled,
     // or service hostname/ip is different from associated device
-    if (!$service['service_disabled'] && ($service['status'] == 1 || ($service['status'] == 0 && $service['status_reason'] === 'snmp') ||
+    if ($service['status'] == 1 || ($service['status'] == 0 && $service['status_reason'] === 'snmp') ||
         $service['attrib_value'] === 'true' || ($service['service_ip'] !== $service['hostname'] &&
-        $service['service_ip'] !== inet6_ntop($service['ip']) ))) {
+        $service['service_ip'] !== inet6_ntop($service['ip']) )) {
+        // Mark service check as enabled if it was disabled previously because device was down
+        if ($service['service_disabled']) {
+            dbUpdate(
+                array('service_disabled' => 0),
+                'services',
+                '`service_id` = ?',
+                array($service['service_id'])
+            );
+        }
         poll_service($service);
         $polled_services++;
     } else {
+        d_echo("\nService check - ".$service['service_id']."\nSkipping service check because device "
+               .$service['hostname']." is down due to icmp.\n");
+        // Mark service check as disabled while device is down and log to eventlog that service check is skipped,
+        // but only if it's not already marked as disabled
         if (!$service['service_disabled']) {
-            d_echo("\nService check - ".$service['service_id']."\nSkipping service check because device "
-                .$service['hostname']." is down due to icmp.\n");
-            Log::event(
+            dbUpdate(
+                array('service_disabled' => 1),
+                'services',
+                '`service_id` = ?',
+                array($service['service_id'])
+            );
+            log_event(
                 "Service check - {$service['service_desc']} ({$service['service_id']}) - 
                 Skipping service check because device {$service['hostname']} is down due to icmp",
                 $service['device_id'],
@@ -80,19 +97,16 @@ foreach (dbFetchRows($sql) as $service) {
                 4,
                 $service['service_id']
             );
-        } else {
-            d_echo("\nService check - ".$service['service_id']."\nSkipping service check because device "
-                .$service['service_type']." is disabled.\n");
         }
     }
-}
+} //end service foreach
 
 $poller_end  = microtime(true);
 $poller_run  = ($poller_end - $poller_start);
 $poller_time = substr($poller_run, 0, 5);
 
 
-$string = $argv[0] . " " . date(\LibreNMS\Config::get('dateformat.compact'))
+$string = $argv[0]." ".date($config['dateformat']['compact'])
     ." - $polled_services services polled in $poller_time secs";
 d_echo("$string\n");
 

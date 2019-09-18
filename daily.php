@@ -7,9 +7,7 @@
  */
 
 use App\Models\Device;
-use App\Models\DeviceGroup;
 use Illuminate\Database\Eloquent\Collection;
-use LibreNMS\Alert\AlertDB;
 use LibreNMS\Config;
 use LibreNMS\Exceptions\LockException;
 use LibreNMS\Util\MemcacheLock;
@@ -26,13 +24,13 @@ if (isset($options['d'])) {
 }
 
 if ($options['f'] === 'update') {
-    if (!Config::get('update')) {
+    if (!$config['update']) {
         exit(0);
     }
 
-    if (Config::get('update_channel') == 'master') {
+    if ($config['update_channel'] == 'master') {
         exit(1);
-    } elseif (Config::get('update_channel') == 'release') {
+    } elseif ($config['update_channel'] == 'release') {
         exit(3);
     }
     exit(0);
@@ -244,11 +242,11 @@ if ($options['f'] === 'purgeusers') {
         }
 
         $purge = 0;
-        if (is_numeric(\LibreNMS\Config::get('radius.users_purge')) && Config::get('auth_mechanism') === 'radius') {
-            $purge = \LibreNMS\Config::get('radius.users_purge');
+        if (is_numeric($config['radius']['users_purge']) && $config['auth_mechanism'] === 'radius') {
+            $purge = $config['radius']['users_purge'];
         }
-        if (is_numeric(\LibreNMS\Config::get('active_directory.users_purge')) && Config::get('auth_mechanism') === 'active_directory') {
-            $purge = \LibreNMS\Config::get('active_directory.users_purge');
+        if (is_numeric($config['active_directory']['users_purge']) && $config['auth_mechanism'] === 'active_directory') {
+            $purge = $config['active_directory']['users_purge'];
         }
         if ($purge > 0) {
             foreach (dbFetchRows("SELECT DISTINCT(`user`) FROM `authlog` WHERE `datetime` >= DATE_SUB(NOW(), INTERVAL ? DAY)", array($purge)) as $user) {
@@ -276,7 +274,7 @@ if ($options['f'] === 'refresh_alert_rules') {
         foreach ($rules as $rule) {
             $rule_options = json_decode($rule['extra'], true);
             if ($rule_options['options']['override_query'] !== 'on') {
-                $data['query'] = AlertDB::genSQL($rule['rule'], $rule['builder']);
+                $data['query'] = GenSQL($rule['rule'], $rule['builder']);
                 if (!empty($data['query'])) {
                     dbUpdate($data, 'alert_rules', 'id=?', array($rule['id']));
                     unset($data);
@@ -289,30 +287,10 @@ if ($options['f'] === 'refresh_alert_rules') {
     }
 }
 
-if ($options['f'] === 'refresh_device_groups') {
-    try {
-        if (Config::get('distributed_poller')) {
-            MemcacheLock::lock('refresh_device_groups', 0, 86000);
-        }
-
-        echo 'Refreshing device group table relationships' . PHP_EOL;
-        DeviceGroup::all()->each(function ($deviceGroup) {
-            if ($deviceGroup->type == 'dynamic') {
-                /** @var DeviceGroup $deviceGroup */
-                $deviceGroup->rules = $deviceGroup->getParser()->generateJoins()->toArray();
-                $deviceGroup->save();
-            }
-        });
-    } catch (LockException $e) {
-        echo $e->getMessage() . PHP_EOL;
-        exit(-1);
-    }
-}
-
 if ($options['f'] === 'notify') {
-    if (\LibreNMS\Config::has('alert.default_mail')) {
+    if (isset($config['alert']['default_mail'])) {
         send_mail(
-            \LibreNMS\Config::get('alert.default_mail'),
+            $config['alert']['default_mail'],
             '[LibreNMS] Auto update has failed for ' . Config::get('distributed_poller_name'),
             "We just attempted to update your install but failed. The information below should help you fix this.\r\n\r\n" . $options['o']
         );

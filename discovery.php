@@ -21,7 +21,7 @@ $sqlparams     = array();
 $options       = getopt('h:m:i:n:d::v::a::q', array('os:','type:'));
 
 if (!isset($options['q'])) {
-    echo \LibreNMS\Config::get('project_name_version') . " Discovery\n";
+    echo $config['project_name_version']." Discovery\n";
 }
 
 if (isset($options['h'])) {
@@ -111,8 +111,8 @@ $module_override = parse_modules('discovery', $options);
 
 $discovered_devices = 0;
 
-if (!empty(\LibreNMS\Config::get('distributed_poller_group'))) {
-    $where .= ' AND poller_group IN(' . \LibreNMS\Config::get('distributed_poller_group') . ')';
+if (!empty($config['distributed_poller_group'])) {
+    $where .= ' AND poller_group IN('.$config['distributed_poller_group'].')';
 }
 
 global $device;
@@ -125,14 +125,7 @@ $run      = ($end - $start);
 $proctime = substr($run, 0, 5);
 
 if ($discovered_devices) {
-    dbInsert([
-        'type' => 'discover',
-        'doing' => $doing,
-        'start' => $start,
-        'duration' => $proctime,
-        'devices' => $discovered_devices,
-        'poller' => \LibreNMS\Config::get('distributed_poller_name')
-    ], 'perf_times');
+    dbInsert(array('type' => 'discover', 'doing' => $doing, 'start' => $start, 'duration' => $proctime, 'devices' => $discovered_devices, 'poller' => $config['distributed_poller_name']), 'perf_times');
     if ($doing === 'new') {
         // We have added a new device by this point so we might want to do some other work
         oxidized_reload_nodes();
@@ -143,7 +136,7 @@ if ($doing === 'new') {
     $new_discovery_lock->release();
 }
 
-$string = $argv[0] . " $doing " . date(\LibreNMS\Config::get('dateformat.compact')) . " - $discovered_devices devices discovered in $proctime secs";
+$string = $argv[0]." $doing ".date($config['dateformat']['compact'])." - $discovered_devices devices discovered in $proctime secs";
 d_echo("$string\n");
 
 if (!isset($options['q'])) {
